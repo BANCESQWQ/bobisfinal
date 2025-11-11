@@ -1,0 +1,68 @@
+<!-- Loading mientras se verifica autenticación -->
+<div *ngIf="isCheckingAuth" class="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+  <div class="text-center text-white">
+    <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
+    <p class="text-xl font-semibold">Verificando autenticación...</p>
+  </div>
+</div>
+
+<!-- Pantalla principal de login -->
+<div *ngIf="!isCheckingAuth" class="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-6">
+  <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden">
+    <!-- Header con gradiente -->
+    <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-center">
+      <div class="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+      </div>
+      <h1 class="text-3xl font-bold text-white mb-2">BOBIS</h1>
+      <p class="text-blue-100 text-lg">Sistema de Gestión</p>
+    </div>
+
+    <!-- Contenido del login -->
+    <div class="p-8">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Bienvenido</h2>
+        <p class="text-gray-600">Inicia sesión con tu cuenta corporativa</p>
+      </div>
+
+      <!-- Botón de login -->
+      <button
+        (click)="loginWithAzure()"
+        [disabled]="isLoggingIn"
+        class="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <svg *ngIf="isLoggingIn" class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <svg *ngIf="!isLoggingIn" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+        </svg>
+        {{ isLoggingIn ? 'Iniciando sesión...' : 'Iniciar sesión con Microsoft' }}
+      </button>
+
+      <!-- Información adicional -->
+      <div class="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <div class="flex items-start space-x-3">
+          <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <div>
+            <p class="text-sm text-blue-800 font-medium">Autenticación segura</p>
+            <p class="text-xs text-blue-600 mt-1">Usa tus credenciales corporativas para acceder al sistema de gestión de bobinas.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="bg-gray-50 px-8 py-4 border-t border-gray-200">
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-gray-500">v1.0.0</span>
+        <span class="text-xs text-gray-500">BOBIS © 2024</span>
+      </div>
+    </div>
+  </div>
+</div>

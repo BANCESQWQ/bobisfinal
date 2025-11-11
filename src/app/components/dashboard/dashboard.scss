@@ -1,0 +1,17 @@
+:host {
+  display: block;
+}
+
+// Animaciones suaves para las tarjetas
+.metric-card {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-4px);
+  }
+}
+
+// Barras de progreso animadas
+.progress-bar {
+  transition: width 0.8s ease-in-out;
+}

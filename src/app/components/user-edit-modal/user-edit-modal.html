@@ -1,0 +1,225 @@
+<div 
+  *ngIf="visible"
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in"
+  (click)="onClose()"
+>
+  <div 
+    class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-slide-in"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div class="bobis-bg-primary text-white p-6 rounded-t-2xl">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-bold">Editar Registro #{{ editedRegistro?.id_registro }}</h2>
+        <button 
+          (click)="onClose()"
+          class="text-white hover:text-gray-200 transition-colors p-1 rounded-full hover:bg-white hover:bg-opacity-20"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <form (ngSubmit)="onSave()" class="p-6 space-y-6" *ngIf="editedRegistro">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Pedido Compra -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Pedido Compra</label>
+          <input
+            type="text"
+            [(ngModel)]="editedRegistro.pedido_compra"
+            name="pedido_compra"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+          >
+        </div>
+
+        <!-- Colada -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Colada</label>
+          <input
+            type="text"
+            [(ngModel)]="editedRegistro.colada"
+            name="colada"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+          >
+        </div>
+
+        <!-- Peso -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Peso (kg)</label>
+          <input
+            type="number"
+            [(ngModel)]="editedRegistro.peso"
+            name="peso"
+            step="0.001"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+          >
+        </div>
+
+        <!-- Cantidad -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Cantidad</label>
+          <input
+            type="number"
+            [(ngModel)]="editedRegistro.cantidad"
+            name="cantidad"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+          >
+        </div>
+
+        <!-- Lote -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Lote</label>
+          <input
+            type="number"
+            [(ngModel)]="editedRegistro.lote"
+            name="lote"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+          >
+        </div>
+
+        <!-- TCN Pedido Compra -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">TCN Pedido Compra</label>
+          <input
+            type="number"
+            [(ngModel)]="editedRegistro.tcn_pedido_compra"
+            name="tcn_pedido_compra"
+            step="0.001"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+          >
+        </div>
+      </div>
+
+      <!-- Observaciones -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Observaciones</label>
+        <textarea
+          [(ngModel)]="editedRegistro.observaciones"
+          name="observaciones"
+          rows="3"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+        ></textarea>
+      </div>
+
+      <!-- Fechas -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Llegada</label>
+          <input
+            type="date"
+            [(ngModel)]="editedRegistro.fecha_llegada"
+            name="fecha_llegada"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+          >
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Inventario</label>
+          <input
+            type="date"
+            [(ngModel)]="editedRegistro.fecha_inventario"
+            name="fecha_inventario"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+          >
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Ingreso Planta</label>
+          <input
+            type="date"
+            [(ngModel)]="editedRegistro.fecha_ingreso_planta"
+            name="fecha_ingreso_planta"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+          >
+        </div>
+      </div>
+
+      <!-- IDs Relacionados -->
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Bobina ID</label>
+          <input
+            type="number"
+            [(ngModel)]="editedRegistro.bobina_id_bobi"
+            name="bobina_id_bobi"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+          >
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Proveedor ID</label>
+          <input
+            type="number"
+            [(ngModel)]="editedRegistro.proveedor_id_prov"
+            name="proveedor_id_prov"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+          >
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Barco ID</label>
+          <input
+            type="number"
+            [(ngModel)]="editedRegistro.barco_id_barco"
+            name="barco_id_barco"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+          >
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Ubicación ID</label>
+          <input
+            type="number"
+            [(ngModel)]="editedRegistro.ubicacion_id_ubi"
+            name="ubicacion_id_ubi"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+          >
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Estado ID</label>
+          <select
+            [(ngModel)]="editedRegistro.estado_id_estado"
+            name="estado_id_estado"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+          >
+            <option [value]="1">Activo</option>
+            <option [value]="2">Inactivo</option>
+            <option [value]="3">Pendiente</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Molino ID</label>
+          <input
+            type="number"
+            [(ngModel)]="editedRegistro.molino_id_molino"
+            name="molino_id_molino"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+          >
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+        <button
+          type="button"
+          (click)="onClose()"
+          class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium shadow-lg shadow-primary-500/25"
+        >
+          Guardar Cambios
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

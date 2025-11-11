@@ -1,1 +1,57 @@
-/* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tema BOBIS */
+:root {
+  --bobis-primary: #2c5aa0;
+  --bobis-secondary: #34a0a4;
+  --bobis-accent: #ff6b35;
+  --bobis-success: #4caf50;
+  --bobis-warning: #ff9800;
+  --bobis-error: #f44336;
+  --bobis-dark: #1e293b;
+  --bobis-light: #f8fafc;
+}
+
+/* Estilos personalizados BOBIS */
+.bobis-bg-primary {
+  background-color: var(--bobis-primary);
+}
+
+.bobis-text-primary {
+  color: var(--bobis-primary);
+}
+
+.bobis-border-primary {
+  border-color: var(--bobis-primary);
+}
+
+/* Animaciones */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
