@@ -38,11 +38,28 @@ export class Login implements OnInit {
   }
 
   loginWithAzure() {
-    this.isLoggingIn = true;
-    
-    // Pequeño delay para que se vea el loading
-    setTimeout(() => {
-      this.authService.loginRedirect();
-    }, 500);
-  }
+  this.isLoggingIn = true;
+
+  setTimeout(() => {
+    this.authService.loginPopup().subscribe({
+      next: (result) => {
+        // Después del login, dejamos la cuenta activa
+        const accounts = this.authService.instance.getAllAccounts();
+        if (accounts.length > 0) {
+          this.authService.instance.setActiveAccount(accounts[0]);
+          this.router.navigate(['/dashboard']);
+        }
+
+        this.isLoggingIn = false;
+        this.isCheckingAuth = false;
+      },
+      error: (error) => {
+        console.error('Error en login popup', error);
+        this.isLoggingIn = false;
+        this.isCheckingAuth = false;
+      }
+    });
+  }, 500);
+}
+
 }

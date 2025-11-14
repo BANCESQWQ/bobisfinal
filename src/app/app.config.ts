@@ -33,18 +33,21 @@ export const appConfig: ApplicationConfig = {
     ),
     importProvidersFrom(
       MsalModule.forRoot(
-        new PublicClientApplication(msalConfig),
-        {
-          interactionType: InteractionType.Redirect,
-          authRequest: loginRequest
-        },
-        {
-          interactionType: InteractionType.Redirect,
-          protectedResourceMap: new Map([
-            ['https://graph.microsoft.com/v1.0/me', ['User.Read']]
-          ])
-        }
-      )
+  new PublicClientApplication(msalConfig),
+  {
+    // Para el guard / login
+    interactionType: InteractionType.Popup,
+    authRequest: loginRequest
+  },
+  {
+    // Para el interceptor de MSAL (si algún día lo usas)
+    interactionType: InteractionType.Popup,
+    protectedResourceMap: new Map([
+      ['https://graph.microsoft.com/v1.0/me', ['User.Read']]
+    ])
+  }
+)
+
     ),
     MsalGuard,
     MsalRedirectComponent
