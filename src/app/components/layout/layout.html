@@ -1,10 +1,17 @@
 <div class="flex h-screen bg-gray-50">
-  <app-sidebar></app-sidebar>
-  
+  <!-- Sidebar -->
+  <app-sidebar 
+    [isMobileMenuOpen]="isMobileMenuOpen"
+    (mobileMenuClosed)="onMobileMenuClosed()"
+  ></app-sidebar>
+
+  <!-- Contenido principal -->
   <div class="flex-1 flex flex-col overflow-hidden">
-    <app-header></app-header>
-    
-    <main class="flex-1 overflow-auto p-6">
+    <!-- Header con evento de menú móvil -->
+    <app-header (mobileMenuToggled)="onMobileMenuToggled()"></app-header>
+
+    <!-- Contenido -->
+    <main class="flex-1 overflow-y-auto">
       <router-outlet></router-outlet>
     </main>
   </div>

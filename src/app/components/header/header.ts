@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -14,10 +14,14 @@ export class Header implements OnInit {
   isProfileMenuOpen = false;
   isNotificationMenuOpen = false;
 
+  // Información del usuario
   userName: string = 'Usuario';
   userEmail: string = 'usuario@empresa.com';
   userInitials: string = 'U';
   userDepartment: string = 'Departamento';
+
+  // Evento para abrir/cerrar sidebar en móvil
+  @Output() mobileMenuToggled = new EventEmitter<void>();
 
   constructor(private authService: AuthService) {}
 
@@ -42,6 +46,11 @@ export class Header implements OnInit {
   toggleNotificationMenu() {
     this.isNotificationMenuOpen = !this.isNotificationMenuOpen;
     this.isProfileMenuOpen = false;
+  }
+
+  // Nueva función para menú móvil
+  toggleMobileMenu() {
+    this.mobileMenuToggled.emit();
   }
 
   logout() {

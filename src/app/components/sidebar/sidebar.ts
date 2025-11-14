@@ -1,10 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
 interface MenuItem {
   label: string;
-  icon: string;
   route: string;
   isActive: boolean;
 }
@@ -17,27 +16,42 @@ interface MenuItem {
   styleUrl: './sidebar.scss'
 })
 export class Sidebar {
+  @Input() isMobileMenuOpen: boolean = false;
+  @Output() mobileMenuClosed = new EventEmitter<void>();
+  
   isSidebarOpen = true;
-  isMobileMenuOpen = false;
 
   menuItems: MenuItem[] = [
-    { label: 'Dashboard', icon: '📊', route: '/dashboard', isActive: true },
-    { label: 'Registros', icon: '📋', route: '/datatables', isActive: false },
-    { label: 'Pedidos', icon: '🛒', route: '/pedidos', isActive: false }, // ← Nuevo item
-    { label: 'Configuración', icon: '⚙️', route: '/settings', isActive: false },
+    { label: 'Dashboard', route: '/dashboard', isActive: true },
+    { label: 'Registros', route: '/datatables', isActive: false },
+    { label: 'Pedidos', route: '/pedidos', isActive: false },
+    { label: 'Configuración', route: '/settings', isActive: false },
   ];
 
   toggleSidebar() {
     this.isSidebarOpen = !this.isSidebarOpen;
   }
 
-  toggleMobileMenu() {
-    this.isMobileMenuOpen = !this.isMobileMenuOpen;
-  }
-
   setActiveItem(clickedItem: MenuItem) {
     this.menuItems.forEach(item => {
       item.isActive = item.label === clickedItem.label;
     });
+    
+    // En móvil, cerrar el sidebar después de hacer click
+    if (window.innerWidth < 1024) {
+      this.closeMobileMenu();
+    }
+  }
+
+  // Cerrar sidebar en móvil cuando se hace click fuera
+  closeMobileMenu() {
+    this.mobileMenuClosed.emit();
+  }
+
+  // Cerrar sidebar en móvil cuando se hace click en un link
+  onLinkClick() {
+    if (window.innerWidth < 1024) {
+      this.closeMobileMenu();
+    }
   }
 }
