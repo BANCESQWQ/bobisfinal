@@ -6,7 +6,7 @@
         <h1 class="text-3xl font-bold mb-2">Sistema BOBIS</h1>
         <p class="text-primary-100 opacity-90">Gestión de Registros de Bobinas</p>
         <p class="text-primary-100 opacity-70 text-sm mt-1">
-          Total: {{ totalRegistros }} registros
+          Total: {{ totalItems }} registros
         </p>
         
         <!-- Estado del backend -->
@@ -108,7 +108,7 @@
                 class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border"
                 [class]="getStatusClass(registro.estado_id_estado)"
               >
-                {{ getEstadoText(registro.estado_id_estado) }}
+                {{ registro.estado_desc || getEstadoText(registro.estado_id_estado) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
@@ -169,7 +169,7 @@
       <div class="flex items-center justify-between">
         <div class="text-sm text-gray-600">
           Mostrando <span class="font-semibold">{{ filteredRegistros.length }}</span> de 
-          <span class="font-semibold">{{ totalRegistros }}</span> resultados 
+          <span class="font-semibold">{{ totalItems }}</span> resultados 
           (Página {{ currentPage }} de {{ totalPages }})
         </div>
         <div class="flex space-x-2">
@@ -190,13 +190,7 @@
           >
             Siguiente →
           </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Modales -->
+          <!-- Modales -->
 <app-user-view-modal
   [registro]="selectedRegistro"
   [visible]="showViewModal"
@@ -209,3 +203,8 @@
   (save)="onSaveRegistro($event)"
   (close)="closeModals()"
 ></app-user-edit-modal>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

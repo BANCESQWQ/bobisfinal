@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Registro } from '../../services/registro.service';
@@ -10,7 +10,7 @@ import { Registro } from '../../services/registro.service';
   templateUrl: './user-edit-modal.html',
   styleUrl: './user-edit-modal.scss'
 })
-export class UserEditModal {
+export class UserEditModal implements OnChanges {
   @Input() registro: Registro | null = null;
   @Input() visible = false;
   @Output() save = new EventEmitter<Registro>();
@@ -20,7 +20,8 @@ export class UserEditModal {
 
   ngOnChanges() {
     if (this.registro) {
-      this.editedRegistro = { ...this.registro };
+      // Crear una copia profunda del registro
+      this.editedRegistro = JSON.parse(JSON.stringify(this.registro));
     }
   }
 

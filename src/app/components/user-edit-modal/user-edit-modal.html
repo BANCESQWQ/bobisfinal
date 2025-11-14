@@ -4,11 +4,11 @@
   (click)="onClose()"
 >
   <div 
-    class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-slide-in"
+    class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto animate-slide-in"
     (click)="$event.stopPropagation()"
   >
     <!-- Header -->
-    <div class="bobis-bg-primary text-white p-6 rounded-t-2xl">
+    <div class="bg-gradient-to-r from-primary-500 to-secondary-500 text-white p-6 rounded-t-2xl">
       <div class="flex items-center justify-between">
         <h2 class="text-2xl font-bold">Editar Registro #{{ editedRegistro?.id_registro }}</h2>
         <button 
@@ -24,14 +24,16 @@
 
     <!-- Form -->
     <form (ngSubmit)="onSave()" class="p-6 space-y-6" *ngIf="editedRegistro">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- Información Principal -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Pedido Compra -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Pedido Compra</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Pedido Compra *</label>
           <input
             type="text"
             [(ngModel)]="editedRegistro.pedido_compra"
             name="pedido_compra"
+            required
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
           >
         </div>
@@ -49,46 +51,71 @@
 
         <!-- Peso -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Peso (kg)</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Peso (kg) *</label>
           <input
             type="number"
             [(ngModel)]="editedRegistro.peso"
             name="peso"
             step="0.001"
+            required
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
           >
         </div>
 
         <!-- Cantidad -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Cantidad</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Cantidad *</label>
           <input
             type="number"
             [(ngModel)]="editedRegistro.cantidad"
             name="cantidad"
+            required
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
           >
         </div>
 
         <!-- Lote -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Lote</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Lote *</label>
           <input
             type="number"
             [(ngModel)]="editedRegistro.lote"
             name="lote"
+            required
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
           >
         </div>
 
-        <!-- TCN Pedido Compra -->
+        <!-- TON Pedido Compra -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">TCN Pedido Compra</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">TON Pedido Compra</label>
           <input
             type="number"
-            [(ngModel)]="editedRegistro.tcn_pedido_compra"
-            name="tcn_pedido_compra"
+            [(ngModel)]="editedRegistro.ton_pedido_compra"
+            name="ton_pedido_compra"
             step="0.001"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+          >
+        </div>
+
+        <!-- N Bobina Proveedor -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">N° Bobina Proveedor</label>
+          <input
+            type="text"
+            [(ngModel)]="editedRegistro.n_bobi_proveedor"
+            name="n_bobi_proveedor"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+          >
+        </div>
+
+        <!-- Bobina Correlativo -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Bobina Correlativo</label>
+          <input
+            type="number"
+            [(ngModel)]="editedRegistro.bobi_correlativo"
+            name="bobi_correlativo"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
           >
         </div>
@@ -108,38 +135,42 @@
       <!-- Fechas -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Llegada</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Llegada *</label>
           <input
             type="date"
             [(ngModel)]="editedRegistro.fecha_llegada"
             name="fecha_llegada"
+            required
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
           >
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Inventario</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Inventario *</label>
           <input
             type="date"
             [(ngModel)]="editedRegistro.fecha_inventario"
             name="fecha_inventario"
+            required
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
           >
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Ingreso Planta</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Ingreso Planta *</label>
           <input
             type="date"
             [(ngModel)]="editedRegistro.fecha_ingreso_planta"
             name="fecha_ingreso_planta"
+            required
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
           >
         </div>
       </div>
 
       <!-- IDs Relacionados -->
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <!-- Bobina -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Bobina ID</label>
           <input
@@ -148,8 +179,10 @@
             name="bobina_id_bobi"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
           >
+          <small class="text-gray-500">{{ editedRegistro.bobina_desc }}</small>
         </div>
 
+        <!-- Proveedor -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Proveedor ID</label>
           <input
@@ -158,8 +191,10 @@
             name="proveedor_id_prov"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
           >
+          <small class="text-gray-500">{{ editedRegistro.proveedor_nombre }}</small>
         </div>
 
+        <!-- Barco -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Barco ID</label>
           <input
@@ -168,8 +203,10 @@
             name="barco_id_barco"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
           >
+          <small class="text-gray-500">{{ editedRegistro.barco_nombre }}</small>
         </div>
 
+        <!-- Ubicación -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Ubicación ID</label>
           <input
@@ -178,8 +215,10 @@
             name="ubicacion_id_ubi"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
           >
+          <small class="text-gray-500">{{ editedRegistro.ubicacion_desc }}</small>
         </div>
 
+        <!-- Estado -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Estado ID</label>
           <select
@@ -188,11 +227,14 @@
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
           >
             <option [value]="1">Activo</option>
-            <option [value]="2">Inactivo</option>
-            <option [value]="3">Pendiente</option>
+            <option [value]="2">Pendiente</option>
+            <option [value]="3">Inactivo</option>
+            <option [value]="4">Procesando</option>
           </select>
+          <small class="text-gray-500">{{ editedRegistro.estado_desc }}</small>
         </div>
 
+        <!-- Molino -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Molino ID</label>
           <input
@@ -201,6 +243,7 @@
             name="molino_id_molino"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
           >
+          <small class="text-gray-500">{{ editedRegistro.molino_nombre }}</small>
         </div>
       </div>
 

@@ -1,12 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-import { 
-  RegistroService, 
-  Registro, 
-  RegistrosResponse  // ← Agregar esta importación
-} from '../../services/registro.service';
+import { RegistroService, Registro } from '../../services/registro.service';
 import { UserViewModal } from '../user-view-modal/user-view-modal';
 import { UserEditModal } from '../user-edit-modal/user-edit-modal';
 
@@ -20,18 +15,15 @@ import { UserEditModal } from '../user-edit-modal/user-edit-modal';
 export class Datatables implements OnInit {
   registros: Registro[] = [];
   filteredRegistros: Registro[] = [];
-  searchTerm: string = '';
-  currentPage: number = 1;
-  perPage: number = 10;
-  totalRegistros: number = 0;
-  totalPages: number = 0;
-  isLoading: boolean = false;
-
-  // Estado del backend
+  isLoading = true;
+  searchTerm = '';
+  currentPage = 1;
+  itemsPerPage = 10;
+  totalItems = 0;
+  totalPages = 0;
   backendStatus: 'connected' | 'error' | 'checking' = 'checking';
-  errorMessage: string = '';
 
-  // Modales
+  // Estados para modales
   selectedRegistro: Registro | null = null;
   showViewModal = false;
   showEditModal = false;
@@ -39,85 +31,94 @@ export class Datatables implements OnInit {
   constructor(private registroService: RegistroService) {}
 
   ngOnInit() {
-    console.log('🔍 Inicializando DataTables...');
+    this.checkBackendConnection();
     this.loadRegistros();
-    this.testConnection();
   }
 
-  testConnection() {
-  this.backendStatus = 'checking';
-  this.registroService.testConnection().subscribe({
-    next: (response: any) => {
-      console.log('✅ Conexión al backend:', response);
-      this.backendStatus = 'connected';
-      this.errorMessage = '';
-    },
-    error: (error) => {
-      console.error('❌ Error conectando al backend:', error);
-      // Si es error 404, el endpoint no existe pero la conexión funciona
-      if (error.status === 404) {
+  checkBackendConnection() {
+    this.registroService.testConnection().subscribe({
+      next: () => {
         this.backendStatus = 'connected';
-        this.errorMessage = 'Endpoint de test no disponible, pero conexión funciona';
-        console.log('⚠️ Endpoint /test-db no existe, pero la conexión HTTP funciona');
-      } else {
+      },
+      error: () => {
         this.backendStatus = 'error';
-        this.errorMessage = error.message;
       }
-    }
-  });
-}
-
-  getBackendStatusMessage(): string {
-    switch (this.backendStatus) {
-      case 'connected': return '✅ Conectado al servidor';
-      case 'error': return `❌ Error: ${this.errorMessage}`;
-      case 'checking': return '⏳ Verificando conexión...';
-      default: return 'Estado desconocido';
-    }
+    });
   }
 
   loadRegistros() {
     this.isLoading = true;
-    console.log('📡 Cargando registros...', {
-      page: this.currentPage,
-      perPage: this.perPage,
-      search: this.searchTerm
-    });
-
-    this.registroService.getRegistros(this.currentPage, this.perPage, this.searchTerm).subscribe({
-      next: (response: RegistrosResponse) => {
-        console.log('📊 Respuesta ADAPTADA del servidor:', response);
-        console.log('📋 Datos recibidos:', response.data);
-        
-        if (response.success) {
-          this.registros = response.data;
-          this.filteredRegistros = response.data;
-          this.totalRegistros = response.pagination.total;
-          this.totalPages = response.pagination.pages;
-          
-          console.log(`✅ ${this.registros.length} registros cargados correctamente`);
-          if (this.registros.length > 0) {
-            console.log('🔍 Primer registro:', this.registros[0]);
+    this.registroService.getRegistros(this.currentPage, this.itemsPerPage, this.searchTerm)
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.registros = response.data;
+            this.filteredRegistros = response.data;
+            this.totalItems = response.pagination.total;
+            this.totalPages = response.pagination.pages;
           }
-        } else {
-          console.error('❌ Servidor respondió con error:', response);
-          this.errorMessage = 'Error en la respuesta del servidor';
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error cargando registros:', error);
+          this.isLoading = false;
+          this.backendStatus = 'error';
         }
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('❌ Error cargando registros:', error);
-        console.error('❌ Detalles del error:', error.message);
-        this.isLoading = false;
-        this.backendStatus = 'error';
-        this.errorMessage = error.message;
-      }
-    });
+      });
   }
 
   applyFilters() {
-    this.currentPage = 1;
-    this.loadRegistros();
+    if (!this.searchTerm.trim()) {
+      this.filteredRegistros = this.registros;
+      return;
+    }
+
+    const searchLower = this.searchTerm.toLowerCase();
+    this.filteredRegistros = this.registros.filter(registro =>
+      registro.pedido_compra?.toLowerCase().includes(searchLower) ||
+      registro.colada?.toLowerCase().includes(searchLower) ||
+      registro.observaciones?.toLowerCase().includes(searchLower) ||
+      registro.proveedor_nombre?.toLowerCase().includes(searchLower) ||
+      registro.bobina_desc?.toLowerCase().includes(searchLower) ||
+      registro.estado_desc?.toLowerCase().includes(searchLower)
+    );
+  }
+
+  getBackendStatusMessage(): string {
+    switch (this.backendStatus) {
+      case 'connected': return 'Conectado';
+      case 'error': return 'Error de conexión';
+      case 'checking': return 'Verificando...';
+      default: return 'Desconocido';
+    }
+  }
+
+  getStatusClass(estadoId: number): string {
+    const statusMap: { [key: number]: string } = {
+      1: 'bg-green-100 text-green-800 border-green-200',
+      2: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      3: 'bg-red-100 text-red-800 border-red-200',
+      4: 'bg-blue-100 text-blue-800 border-blue-200'
+    };
+    return statusMap[estadoId] || 'bg-gray-100 text-gray-800 border-gray-200';
+  }
+
+  getEstadoText(estadoId: number): string {
+    const estadoMap: { [key: number]: string } = {
+      1: 'Activo',
+      2: 'Pendiente',
+      3: 'Inactivo',
+      4: 'Procesando'
+    };
+    return estadoMap[estadoId] || 'Desconocido';
+  }
+
+  // Navegación de páginas
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.loadRegistros();
+    }
   }
 
   previousPage() {
@@ -127,13 +128,7 @@ export class Datatables implements OnInit {
     }
   }
 
-  nextPage() {
-    if (this.currentPage < this.totalPages) {
-      this.currentPage++;
-      this.loadRegistros();
-    }
-  }
-
+  // Funciones para modales
   viewRegistro(registro: Registro) {
     this.selectedRegistro = registro;
     this.showViewModal = true;
@@ -144,41 +139,26 @@ export class Datatables implements OnInit {
     this.showEditModal = true;
   }
 
-  onSaveRegistro(updatedRegistro: Registro) {
-    console.log('Registro actualizado:', updatedRegistro);
-    this.showEditModal = false;
-    this.selectedRegistro = null;
-    this.loadRegistros();
-  }
-
   deleteRegistro(id: number) {
-    if (confirm('¿Estás seguro de eliminar este registro?')) {
+    if (confirm('¿Estás seguro de que quieres eliminar este registro?')) {
       console.log('Eliminar registro:', id);
+      // Aquí iría la llamada al servicio para eliminar
+      // Por ahora solo recargamos los datos
       this.loadRegistros();
     }
+  }
+
+  onSaveRegistro(registro: Registro) {
+    console.log('Guardar registro:', registro);
+    // Aquí iría la llamada al servicio para guardar
+    // Por ahora solo cerramos el modal y recargamos
+    this.closeModals();
+    this.loadRegistros();
   }
 
   closeModals() {
     this.showViewModal = false;
     this.showEditModal = false;
     this.selectedRegistro = null;
-  }
-
-  getStatusClass(estadoId: number): string {
-    switch (estadoId) {
-      case 1: return 'bg-green-100 text-green-800 border border-green-200';
-      case 2: return 'bg-red-100 text-red-800 border border-red-200';
-      case 3: return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
-      default: return 'bg-gray-100 text-gray-800 border border-gray-200';
-    }
-  }
-
-  getEstadoText(estadoId: number): string {
-    switch (estadoId) {
-      case 1: return 'Activo';
-      case 2: return 'Inactivo';
-      case 3: return 'Pendiente';
-      default: return 'Desconocido';
-    }
   }
 }

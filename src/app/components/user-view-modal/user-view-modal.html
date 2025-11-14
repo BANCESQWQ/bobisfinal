@@ -1,18 +1,18 @@
 <div 
   *ngIf="visible"
   class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in"
-  (click)="close()"
+  (click)="closeModal()"
 >
   <div 
-    class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-slide-in"
+    class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-slide-in"
     (click)="$event.stopPropagation()"
   >
     <!-- Header -->
-    <div class="bobis-bg-primary text-white p-6 rounded-t-2xl">
+    <div class="bg-gradient-to-r from-primary-500 to-secondary-500 text-white p-6 rounded-t-2xl">
       <div class="flex items-center justify-between">
         <h2 class="text-2xl font-bold">Detalles del Registro</h2>
         <button 
-          (click)="close()"
+          (click)="closeModal()"
           class="text-white hover:text-gray-200 transition-colors p-1 rounded-full hover:bg-white hover:bg-opacity-20"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -63,23 +63,36 @@
         </div>
 
         <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+          <span class="font-medium text-gray-700">TON Pedido:</span>
+          <span class="text-gray-900">{{ registro.ton_pedido_compra || 'N/A' }}</span>
+        </div>
+
+        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+          <span class="font-medium text-gray-700">N° Bobina Proveedor:</span>
+          <span class="text-gray-900">{{ registro.n_bobi_proveedor || 'N/A' }}</span>
+        </div>
+
+        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+          <span class="font-medium text-gray-700">Bobina Correlativo:</span>
+          <span class="text-gray-900">{{ registro.bobi_correlativo || 'N/A' }}</span>
+        </div>
+      </div>
+
+      <!-- Estado y Observaciones -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
           <span class="font-medium text-gray-700">Estado:</span>
           <span 
             class="px-3 py-1 rounded-full text-sm font-medium border"
             [class]="getStatusClass(registro.estado_id_estado)"
           >
-            {{ getEstadoText(registro.estado_id_estado) }}
+            {{ registro.estado_desc || getEstadoText(registro.estado_id_estado) }}
           </span>
         </div>
 
-        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-          <span class="font-medium text-gray-700">TCN Pedido:</span>
-          <span class="text-gray-900">{{ registro.tcn_pedido_compra || 'N/A' }}</span>
-        </div>
-
-        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+        <div class="p-3 bg-gray-50 rounded-lg">
           <span class="font-medium text-gray-700">Observaciones:</span>
-          <span class="text-gray-900 text-right">{{ registro.observaciones || 'Sin observaciones' }}</span>
+          <p class="text-gray-900 mt-1">{{ registro.observaciones || 'Sin observaciones' }}</p>
         </div>
       </div>
 
@@ -102,33 +115,44 @@
         </div>
       </div>
 
-      <!-- IDs Relacionados -->
+      <!-- Información Relacionada -->
       <div class="border-t border-gray-200 pt-4">
-        <h4 class="text-lg font-semibold text-gray-800 mb-4">Relaciones</h4>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <div class="text-center p-2 bg-gray-100 rounded">
-            <span class="block text-xs text-gray-600">Bobina ID</span>
-            <span class="font-semibold">{{ registro.bobina_id_bobi || 'N/A' }}</span>
+        <h4 class="text-lg font-semibold text-gray-800 mb-4">Información Relacionada</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+            <span class="block text-sm font-medium text-blue-700">Bobina</span>
+            <span class="text-blue-900 font-semibold">{{ registro.bobina_desc || 'N/A' }}</span>
+            <small class="text-blue-600">ID: {{ registro.bobina_id_bobi || 'N/A' }}</small>
           </div>
-          <div class="text-center p-2 bg-gray-100 rounded">
-            <span class="block text-xs text-gray-600">Proveedor ID</span>
-            <span class="font-semibold">{{ registro.proveedor_id_prov || 'N/A' }}</span>
+          
+          <div class="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+            <span class="block text-sm font-medium text-green-700">Proveedor</span>
+            <span class="text-green-900 font-semibold">{{ registro.proveedor_nombre || 'N/A' }}</span>
+            <small class="text-green-600">ID: {{ registro.proveedor_id_prov || 'N/A' }}</small>
           </div>
-          <div class="text-center p-2 bg-gray-100 rounded">
-            <span class="block text-xs text-gray-600">Barco ID</span>
-            <span class="font-semibold">{{ registro.barco_id_barco || 'N/A' }}</span>
+          
+          <div class="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+            <span class="block text-sm font-medium text-purple-700">Barco</span>
+            <span class="text-purple-900 font-semibold">{{ registro.barco_nombre || 'N/A' }}</span>
+            <small class="text-purple-600">ID: {{ registro.barco_id_barco || 'N/A' }}</small>
           </div>
-          <div class="text-center p-2 bg-gray-100 rounded">
-            <span class="block text-xs text-gray-600">Ubicación ID</span>
-            <span class="font-semibold">{{ registro.ubicacion_id_ubi || 'N/A' }}</span>
+          
+          <div class="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
+            <span class="block text-sm font-medium text-orange-700">Ubicación</span>
+            <span class="text-orange-900 font-semibold">{{ registro.ubicacion_desc || 'N/A' }}</span>
+            <small class="text-orange-600">ID: {{ registro.ubicacion_id_ubi || 'N/A' }}</small>
           </div>
-          <div class="text-center p-2 bg-gray-100 rounded">
-            <span class="block text-xs text-gray-600">Estado ID</span>
-            <span class="font-semibold">{{ registro.estado_id_estado || 'N/A' }}</span>
+          
+          <div class="p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg">
+            <span class="block text-sm font-medium text-red-700">Estado</span>
+            <span class="text-red-900 font-semibold">{{ registro.estado_desc || 'N/A' }}</span>
+            <small class="text-red-600">ID: {{ registro.estado_id_estado || 'N/A' }}</small>
           </div>
-          <div class="text-center p-2 bg-gray-100 rounded">
-            <span class="block text-xs text-gray-600">Molino ID</span>
-            <span class="font-semibold">{{ registro.molino_id_molino || 'N/A' }}</span>
+          
+          <div class="p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg">
+            <span class="block text-sm font-medium text-indigo-700">Molino</span>
+            <span class="text-indigo-900 font-semibold">{{ registro.molino_nombre || 'N/A' }}</span>
+            <small class="text-indigo-600">ID: {{ registro.molino_id_molino || 'N/A' }}</small>
           </div>
         </div>
       </div>
@@ -136,7 +160,7 @@
       <!-- Footer -->
       <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
         <button
-          (click)="close()"
+          (click)="closeModal()"
           class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
         >
           Cerrar
