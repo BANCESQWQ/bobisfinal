@@ -28,6 +28,7 @@ export interface Registro {
   molino_nombre: string;
   n_bobi_proveedor: string;
   bobi_correlativo: number;
+  cod_bobin2?: number;
 }
 
 export interface Proveedor {
@@ -173,7 +174,8 @@ export class RegistroService {
         molino_id_molino: item.molino_id_molino || 0,
         molino_nombre: item.molino_nombre || 'Sin molino',
         n_bobi_proveedor: item.n_bobi_proveedor || '',
-        bobi_correlativo: item.bobi_correlativo || 0
+        bobi_correlativo: item.bobi_correlativo || 0,
+        cod_bobin2: item.cod_bobin2 || undefined // ✅ Agregar este campo
       };
     });
 

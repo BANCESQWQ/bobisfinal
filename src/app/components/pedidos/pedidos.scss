@@ -1,0 +1,90 @@
+:host {
+  display: block;
+  height: 100vh;
+}
+
+// Animaciones personalizadas
+@keyframes slideInRight {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+// Estilos para drag and drop
+.drag-over {
+  background: linear-gradient(135deg, theme('colors.green.50'), theme('colors.green.100'));
+  border: 2px dashed theme('colors.green.300') !important;
+}
+
+.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+// Bloques de bobinas
+.bobina-block {
+  transition: all 0.2s ease;
+  cursor: move;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+// Zona de arrastre
+.drop-zone {
+  transition: all 0.3s ease;
+  
+  &.drag-over {
+    background: linear-gradient(135deg, theme('colors.green.50'), theme('colors.green.100'));
+    border: 2px dashed theme('colors.green.300');
+  }
+}
+
+// Estados de selección
+.selected {
+  border-left: 4px solid theme('colors.orange.500');
+  background: linear-gradient(135deg, theme('colors.orange.50'), theme('colors.orange.100'));
+}
+
+// Scroll personalizado
+.custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: theme('colors.gray.100');
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: theme('colors.gray.300');
+    border-radius: 3px;
+    
+    &:hover {
+      background: theme('colors.gray.400');
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 1024px) {
+  .grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+  
+  .lg\\:col-span-2 {
+    grid-column: span 1;
+  }
+}

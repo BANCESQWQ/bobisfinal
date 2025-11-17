@@ -1,0 +1,136 @@
+<div 
+  *ngIf="visible"
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in"
+  (click)="closeModal()"
+>
+  <div 
+    class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto animate-slide-in"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-primary-500 to-secondary-500 text-white p-6 rounded-t-2xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-bold">Detalles de Pedido</h2>
+          <p class="text-primary-100 opacity-90 mt-1">
+            {{ registros.length }} bobinas en el pedido
+          </p>
+        </div>
+        <button 
+          (click)="closeModal()"
+          class="text-white hover:text-gray-200 transition-colors p-1 rounded-full hover:bg-white hover:bg-opacity-20"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="p-6">
+      <!-- Resumen -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-blue-50 p-4 rounded-lg text-center">
+          <div class="text-2xl font-bold text-blue-600">{{ registros.length }}</div>
+          <div class="text-sm text-blue-700 font-medium">Total Bobinas</div>
+        </div>
+        <div class="bg-green-50 p-4 rounded-lg text-center">
+          <div class="text-2xl font-bold text-green-600">
+            {{ getPesoTotal() | number:'1.0-0' }} kg
+          </div>
+          <div class="text-sm text-green-700 font-medium">Peso Total</div>
+        </div>
+        <div class="bg-purple-50 p-4 rounded-lg text-center">
+          <div class="text-2xl font-bold text-purple-600">
+            {{ getCantidadTotal() }}
+          </div>
+          <div class="text-sm text-purple-700 font-medium">Cantidad Total</div>
+        </div>
+        <div class="bg-orange-50 p-4 rounded-lg text-center">
+          <div class="text-2xl font-bold text-orange-600">
+            {{ getProveedoresUnicos() }}
+          </div>
+          <div class="text-sm text-orange-700 font-medium">Proveedores</div>
+        </div>
+      </div>
+
+      <!-- Lista de Bobinas -->
+      <div class="border-t border-gray-200 pt-4">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Listado de Bobinas</h3>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div 
+            *ngFor="let registro of registros"
+            class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all duration-200"
+          >
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <h4 class="font-semibold text-gray-800 text-lg">#{{ registro.id_registro }}</h4>
+                <p class="text-gray-600 text-sm">{{ registro.bobina_desc }}</p>
+              </div>
+              <span 
+                class="px-3 py-1 text-xs font-semibold rounded-full border"
+                [class]="getStatusClass(registro.estado_id_estado)"
+              >
+                {{ registro.estado_desc || getEstadoText(registro.estado_id_estado) }}
+              </span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <div class="flex items-center space-x-2">
+                <span class="text-gray-500">Lote:</span>
+                <span class="font-semibold text-gray-700">{{ registro.lote || 'N/A' }}</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="text-gray-500">Código N2:</span>
+                <span class="font-semibold text-gray-700">{{ registro.cod_bobin2 || 'N/A' }}</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="text-gray-500">Peso:</span>
+                <span class="font-semibold text-green-600">{{ registro.peso }} kg</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="text-gray-500">Cantidad:</span>
+                <span class="font-semibold text-gray-700">{{ registro.cantidad }}</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="text-gray-500">Proveedor:</span>
+                <span class="font-semibold text-blue-600">{{ registro.proveedor_nombre }}</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="text-gray-500">F. Ingreso:</span>
+                <span class="font-semibold text-gray-700">{{ registro.fecha_ingreso_planta }}</span>
+              </div>
+            </div>
+
+            <!-- Observaciones -->
+            <div *ngIf="registro.observaciones" class="mt-3 pt-3 border-t border-gray-200">
+              <span class="text-xs text-gray-500 font-medium">Observaciones:</span>
+              <p class="text-sm text-gray-700 mt-1">{{ registro.observaciones }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mensaje cuando no hay registros -->
+        <div *ngIf="registros.length === 0" class="text-center py-8 text-gray-500">
+          <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+          </svg>
+          <p class="text-lg font-medium text-gray-600">No hay bobinas en el pedido</p>
+          <p class="text-sm text-gray-500 mt-1">Agrega bobinas desde el panel izquierdo</p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200 mt-6">
+        <button
+          (click)="closeModal()"
+          class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

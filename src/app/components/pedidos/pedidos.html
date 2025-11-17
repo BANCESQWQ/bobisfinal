@@ -1,243 +1,238 @@
-<div class="p-6 space-y-6">
-  <!-- Header -->
-  <div class="bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl shadow-lg p-8 text-white">
-    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+<div class="p-6 space-y-6 h-screen flex flex-col">
+  <!-- Header Naranja -->
+  <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl shadow-lg p-6 text-white">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
       <div>
-        <h1 class="text-3xl font-bold mb-2">Gestión de Pedidos</h1>
-        <p class="text-orange-100 opacity-90">Administra y realiza nuevos pedidos</p>
-        <p class="text-orange-100 opacity-70 text-sm mt-1">
-          Total: {{ totalPedidos }} pedidos
-        </p>
+        <h1 class="text-3xl font-bold mb-2">Sistema de Despachos</h1>
+        <p class="text-orange-100 opacity-90">Selecciona y gestiona registros para despacho</p>
       </div>
 
-      <div class="flex flex-col sm:flex-row gap-4">
-        <!-- Búsqueda -->
-        <div class="relative">
-          <input
-            type="text"
-            [(ngModel)]="searchTerm"
-            placeholder="Buscar pedidos..."
-            class="w-full lg:w-80 pl-12 pr-4 py-3 rounded-xl bg-white bg-opacity-20 backdrop-blur-sm text-white placeholder-white placeholder-opacity-70 border border-white border-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all"
-          >
-          <div class="absolute left-4 top-3.5">
-            <svg class="w-5 h-5 text-white opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
-          </div>
-        </div>
-
-        <!-- Botón Nuevo Pedido -->
-        <button
-          (click)="abrirNuevoPedido()"
-          class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-3 rounded-xl transition-all duration-300 backdrop-blur-sm border border-white border-opacity-30 flex items-center gap-3 font-medium"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-          </svg>
-          Nuevo Pedido
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Lista de Pedidos -->
-  <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="w-full">
-        <thead>
-          <tr class="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">N° Pedido</th>
-            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Cliente</th>
-            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Fecha</th>
-            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Estado</th>
-            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Total</th>
-            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Items</th>
-            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Acciones</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-          <tr 
-            *ngFor="let pedido of filteredPedidos" 
-            class="hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-25 transition-all duration-200"
-          >
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span class="text-sm font-semibold text-gray-900">{{ pedido.numero_pedido }}</span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm text-gray-900">{{ pedido.cliente }}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm text-gray-900">{{ pedido.fecha_creacion }}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span 
-                class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border"
-                [class]="getEstadoClass(pedido.estado)"
-              >
-                {{ getEstadoText(pedido.estado) }}
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm font-semibold text-green-600">${{ pedido.total | number:'1.2-2' }}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm text-gray-900">{{ pedido.items.length }} items</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-              <div class="flex items-center space-x-2">
-                <button class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-xl transition-all duration-200 transform hover:scale-110" title="Ver detalles">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                  </svg>
-                </button>
-                <button class="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-xl transition-all duration-200 transform hover:scale-110" title="Editar">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                  </svg>
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- Modal Nuevo Pedido -->
-<div 
-  *ngIf="showNuevoPedidoModal"
-  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in"
->
-  <div 
-    class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-slide-in"
-  >
-    <!-- Header -->
-    <div class="bg-orange-500 text-white p-6 rounded-t-2xl">
-      <div class="flex items-center justify-between">
-        <h2 class="text-2xl font-bold">Nuevo Pedido</h2>
-        <button
-          (click)="showNuevoPedidoModal = false"
-          class="text-white hover:text-gray-200 transition-colors p-1 rounded-full hover:bg-white hover:bg-opacity-20"
-        >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Formulario -->
-    <div class="p-6 space-y-6">
-      <!-- Información del Cliente -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Cliente</label>
+      <!-- Búsqueda -->
+      <div class="relative flex-1 max-w-2xl">
         <input
           type="text"
-          [(ngModel)]="nuevoPedido.cliente"
-          placeholder="Nombre del cliente"
-          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+          [(ngModel)]="searchTerm"
+          (input)="aplicarFiltros()"
+          placeholder="Buscar por descripción bobina, código nivel 2, lote..."
+          class="w-full pl-12 pr-4 py-3 rounded-xl bg-white bg-opacity-20 backdrop-blur-sm text-white placeholder-white placeholder-opacity-70 border border-white border-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all"
         >
+        <div class="absolute left-4 top-3.5">
+          <svg class="w-5 h-5 text-white opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenido Principal -->
+  <div class="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
+    
+    <!-- Panel Izquierdo - Bloques Disponibles -->
+    <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden flex flex-col">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200 p-4">
+        <h3 class="text-lg font-semibold text-gray-800">
+          Bobinas Disponibles 
+          <span class="text-sm font-normal text-gray-600 ml-2">
+            ({{ filteredRegistros.length }} resultados)
+          </span>
+        </h3>
+        <p class="text-sm text-gray-600 mt-1">Arrastra o haz click para seleccionar</p>
       </div>
 
-      <!-- Agregar Items -->
-      <div class="border-t border-gray-200 pt-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Agregar Items</h3>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Producto</label>
-            <input
-              type="text"
-              [(ngModel)]="nuevoItem.producto"
-              placeholder="Nombre del producto"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+      <!-- Loading -->
+      <div *ngIf="isLoading" class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+      </div>
+
+      <!-- Bloques de Bobinas -->
+      <div 
+        *ngIf="!isLoading" 
+        class="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-4"
+      >
+        <div 
+          *ngFor="let registro of filteredRegistros"
+          [class.bg-orange-50]="estaSeleccionado(registro)"
+          [class.border-orange-300]="estaSeleccionado(registro)"
+          class="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all duration-200 cursor-move"
+          draggable="true"
+          (dragstart)="onDragStart(registro, $event)"
+          (click)="seleccionarRegistro(registro)"
+        >
+          <!-- Header del Bloque -->
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <h4 class="font-semibold text-gray-800 text-lg">#{{ registro.id_registro }}</h4>
+              <p class="text-gray-600 text-sm">{{ registro.bobina_desc }}</p>
+            </div>
+            <span 
+              class="px-2 py-1 text-xs font-semibold rounded-full border"
+              [class]="getStatusClass(registro.estado_id_estado)"
             >
+              {{ registro.estado_desc || getEstadoText(registro.estado_id_estado) }}
+            </span>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Cantidad</label>
-            <input
-              type="number"
-              [(ngModel)]="nuevoItem.cantidad"
-              min="1"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          
+          <!-- Información del Bloque -->
+          <div class="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
+            <div class="flex items-center space-x-1">
+              <span class="font-medium">Lote:</span>
+              <span>{{ registro.lote || 'N/A' }}</span>
+            </div>
+            <div class="flex items-center space-x-1">
+              <span class="font-medium">Código N2:</span>
+              <span>{{ registro.cod_bobin2 || 'N/A' }}</span>
+            </div>
+            <div class="flex items-center space-x-1">
+              <span class="font-medium">Peso:</span>
+              <span class="font-semibold text-green-600">{{ registro.peso }} kg</span>
+            </div>
+            <div class="flex items-center space-x-1">
+              <span class="font-medium">Cantidad:</span>
+              <span>{{ registro.cantidad }}</span>
+            </div>
+          </div>
+
+          <!-- Fecha y Acciones -->
+          <div class="flex justify-between items-center pt-3 border-t border-gray-200">
+            <span class="text-xs text-gray-500">{{ registro.fecha_ingreso_planta }}</span>
+            <button
+              (click)="verDetalles(registro, $event)"
+              class="text-blue-600 hover:text-blue-800 underline transition-colors text-sm font-medium"
+              title="Ver detalles completos"
             >
+              Ver detalles
+            </button>
           </div>
+        </div>
+
+        <!-- Mensaje cuando no hay registros -->
+        <div *ngIf="filteredRegistros.length === 0" class="col-span-2 text-center py-12 text-gray-500">
+          <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <p class="text-lg font-medium text-gray-600">No se encontraron bobinas</p>
+          <p class="text-sm text-gray-500 mt-1">Intenta con otros términos de búsqueda</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Derecho - Registros Seleccionados -->
+    <div 
+      class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden flex flex-col"
+      (dragover)="onDragOver($event)"
+      (drop)="onDrop($event)"
+    >
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-green-50 to-green-100 border-b border-green-200 p-4">
+        <div class="flex justify-between items-center">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Precio Unitario</label>
-            <input
-              type="number"
-              [(ngModel)]="nuevoItem.precio_unitario"
-              min="0"
-              step="0.01"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            >
+            <h3 class="text-lg font-semibold text-green-800">
+              Pedido Actual
+              <span class="text-sm font-normal text-green-600 ml-2">
+                ({{ registrosSeleccionados.length }})
+              </span>
+            </h3>
+            <p class="text-sm text-green-600 mt-1">Arrastra bobinas aquí o haz click</p>
           </div>
+          <button
+            *ngIf="registrosSeleccionados.length > 0"
+            (click)="verDetallesPedido()"
+            class="bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600 transition-colors font-medium"
+          >
+            Ver Detalles
+          </button>
+        </div>
+      </div>
+
+      <!-- Lista de Seleccionados -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-3">
+        <div 
+          *ngFor="let registro of registrosSeleccionados"
+          class="bg-gradient-to-br from-green-50 to-green-25 border border-green-200 rounded-lg p-4 transition-all duration-200 hover:shadow-md"
+        >
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <h4 class="font-semibold text-green-800 text-sm">#{{ registro.id_registro }}</h4>
+              <p class="text-green-700 text-sm">{{ registro.bobina_desc }}</p>
+            </div>
+            <button
+              (click)="quitarRegistro(registro)"
+              class="text-red-500 hover:text-red-700 transition-colors p-1"
+              title="Quitar del pedido"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-2 text-xs text-green-600">
+            <div>
+              <span class="font-medium">Lote:</span> {{ registro.lote }}
+            </div>
+            <div>
+              <span class="font-medium">Código N2:</span> {{ registro.cod_bobin2 || 'N/A' }}
+            </div>
+            <div>
+              <span class="font-medium">Peso:</span> {{ registro.peso }} kg
+            </div>
+            <div>
+              <span class="font-medium">F. Ingreso:</span> {{ registro.fecha_ingreso_planta }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Mensaje cuando no hay seleccionados -->
+        <div *ngIf="registrosSeleccionados.length === 0" class="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
+          <svg class="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+          </svg>
+          <p class="text-sm font-medium text-gray-600">Zona de Arrastre</p>
+          <p class="text-xs text-gray-400 mt-1">Arrastra bobinas aquí o haz click en ellas</p>
+        </div>
+      </div>
+
+      <!-- Observaciones y Botón -->
+      <div class="border-t border-gray-200 p-4 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Observaciones del Despacho
+          </label>
+          <textarea
+            [(ngModel)]="observacionesDespacho"
+            rows="3"
+            placeholder="Ingresa observaciones para el despacho..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors resize-none"
+          ></textarea>
         </div>
 
         <button
-          (click)="agregarItem()"
-          class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
+          (click)="enviarDespacho()"
+          [disabled]="registrosSeleccionados.length === 0"
+          class="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300 font-semibold shadow-lg shadow-orange-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
           </svg>
-          Agregar Item
+          Enviar Despacho ({{ registrosSeleccionados.length }})
         </button>
       </div>
-
-      <!-- Items Agregados -->
-      <div *ngIf="nuevoPedido.items && nuevoPedido.items.length > 0">
-        <h4 class="text-md font-semibold text-gray-800 mb-3">Items del Pedido</h4>
-        <div class="space-y-2">
-          <div 
-            *ngFor="let item of nuevoPedido.items; let i = index"
-            class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-          >
-            <div class="flex-1">
-              <span class="font-medium">{{ item.producto }}</span>
-              <span class="text-sm text-gray-600 ml-2">x{{ item.cantidad }}</span>
-            </div>
-            <div class="flex items-center gap-4">
-              <span class="font-semibold">${{ item.subtotal | number:'1.2-2' }}</span>
-              <button
-                (click)="eliminarItem(i)"
-                class="text-red-600 hover:text-red-800 p-1"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Total -->
-        <div class="border-t border-gray-200 pt-4 mt-4">
-          <div class="flex justify-between items-center text-lg font-semibold">
-            <span>Total:</span>
-            <span class="text-green-600">${{ calcularTotal() | number:'1.2-2' }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <div class="flex justify-end space-x-3 p-6 border-t border-gray-200">
-      <button
-        (click)="showNuevoPedidoModal = false"
-        class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-      >
-        Cancelar
-      </button>
-      <button
-        (click)="crearPedido()"
-        [disabled]="!nuevoPedido.cliente || !nuevoPedido.items || nuevoPedido.items.length === 0"
-        class="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium shadow-lg shadow-orange-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        Crear Pedido
-      </button>
     </div>
   </div>
 </div>
+
+<!-- Modal de Detalles de Bobina -->
+<app-user-view-modal
+  [registro]="selectedRegistro"
+  [visible]="showViewModal"
+  (close)="closeModals()"
+></app-user-view-modal>
+
+<!-- Modal de Detalles de Pedido -->
+<app-detalles-pedido
+  [registros]="registrosSeleccionados"
+  [visible]="showDetallesPedidoModal"
+  (close)="closeModals()"
+></app-detalles-pedido>

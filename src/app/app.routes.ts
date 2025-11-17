@@ -5,7 +5,9 @@ import { Datatables } from './components/datatables/datatables';
 import { Pedidos } from './components/pedidos/pedidos';
 import { Login } from './components/login/login';
 import { authGuard } from './auth.guard';
+import { DetallesPedido } from './components/detalles-pedido/detalles-pedido';
 
+// Agregar si quieres una ruta específica, o dejarlo como componente modal
 export const routes: Routes = [
   { path: 'login', component: Login },
   {
@@ -14,9 +16,10 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'detalles-pedido',component:DetallesPedido},
       { path: 'dashboard', component: Dashboard },
       { path: 'datatables', component: Datatables },
-      { path: 'pedidos', component: Pedidos },
+      { path: 'pedidos', component: Pedidos, canActivate: [authGuard] },
     ]
   }
 ];

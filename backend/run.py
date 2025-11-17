@@ -50,62 +50,62 @@ def get_registros():
 
         # Consulta base con JOINs para obtener información relacionada
         query = """
-            SELECT 
-                r.ID_REGISTRO,
-                r.FECHA_LLEGADA,
-                r.PEDIDO_COMPRA,
-                r.COLADA,
-                r.PESO,
-                r.CANTIDAD,
-                r.LOTE,
-                r.FECHA_INVENTARIO,
-                r.OBSERVACIONES,
-                r.TON_PEDIDO_COMPRA,
-                r.FECHA_INGRESO_PLANTA,
-                r.BOBINA_ID_BOBI,
-                b.DESC_BOBI as BOBINA_DESC,
-                r.PROVEEDOR_ID_PROV,
-                p.NOMBRE_PROV as PROVEEDOR_NOMBRE,
-                r.BARCO_ID_BARCO,
-                bc.NOMBRE_BARCO as BARCO_NOMBRE,
-                r.UBICACION_ID_UBI,
-                u.DESC_UBI as UBICACION_DESC,
-                r.ESTADO_ID_ESTADO,
-                e.DESC_ESTADO as ESTADO_DESC,
-                r.MOLINO_ID_MOLINO,
-                m.NOMBRE_MOLINO as MOLINO_NOMBRE,
-                r.N_BOBI_PROVEEDOR,
-                r.BOBI_CORRELATIVO
-            FROM REGISTROS r
-            LEFT JOIN BOBINA b ON r.BOBINA_ID_BOBI = b.ID_BOBI
-            LEFT JOIN PROVEEDOR p ON r.PROVEEDOR_ID_PROV = p.ID_PROV
-            LEFT JOIN BARCO bc ON r.BARCO_ID_BARCO = bc.ID_BARCO
-            LEFT JOIN UBICACION u ON r.UBICACION_ID_UBI = u.ID_UBI
-            LEFT JOIN ESTADO e ON r.ESTADO_ID_ESTADO = e.ID_ESTADO
-            LEFT JOIN MOLINO m ON r.MOLINO_ID_MOLINO = m.ID_MOLINO
-            WHERE 1=1
+        SELECT 
+        r.ID_REGISTRO,
+        r.FECHA_LLEGADA,
+        r.PEDIDO_COMPRA,
+        r.COLADA,
+        r.PESO,
+        r.CANTIDAD,
+        r.LOTE,
+        r.FECHA_INVENTARIO,
+        r.OBSERVACIONES,
+        r.TON_PEDIDO_COMPRA,
+        r.FECHA_INGRESO_PLANTA,
+        r.BOBINA_ID_BOBI,
+        b.DESC_BOBI as BOBINA_DESC,
+        r.PROVEEDOR_ID_PROV,
+        p.NOMBRE_PROV as PROVEEDOR_NOMBRE,
+        r.BARCO_ID_BARCO,
+        bc.NOMBRE_BARCO as BARCO_NOMBRE,
+        r.UBICACION_ID_UBI,
+        u.DESC_UBI as UBICACION_DESC,
+        r.ESTADO_ID_ESTADO,
+        e.DESC_ESTADO as ESTADO_DESC,
+        r.MOLINO_ID_MOLINO,
+        m.NOMBRE_MOLINO as MOLINO_NOMBRE,
+        r.N_BOBI_PROVEEDOR,
+        r.BOBI_CORRELATIVO,
+        r.COD_BOBIN2  -- ✅ AGREGAR ESTE CAMPO
+        FROM REGISTROS r
+        LEFT JOIN BOBINA b ON r.BOBINA_ID_BOBI = b.ID_BOBI
+        LEFT JOIN PROVEEDOR p ON r.PROVEEDOR_ID_PROV = p.ID_PROV
+        LEFT JOIN BARCO bc ON r.BARCO_ID_BARCO = bc.ID_BARCO
+        LEFT JOIN UBICACION u ON r.UBICACION_ID_UBI = u.ID_UBI
+        LEFT JOIN ESTADO e ON r.ESTADO_ID_ESTADO = e.ID_ESTADO
+        LEFT JOIN MOLINO m ON r.MOLINO_ID_MOLINO = m.ID_MOLINO
+        WHERE 1=1
         """
         params = {}
-
         if search:
-            query += " AND (r.PEDIDO_COMPRA LIKE :search OR r.COLADA LIKE :search OR r.OBSERVACIONES LIKE :search OR p.NOMBRE_PROV LIKE :search)"
+            query += " AND (r.PEDIDO_COMPRA LIKE :search OR r.COLADA LIKE :search OR r.OBSERVACIONES LIKE :search OR p.NOMBRE_PROV LIKE :search OR b.DESC_BOBI LIKE :search OR r.COD_BOBIN2 LIKE :search)"
             params['search'] = f"%{search}%"
 
         # Contar total primero
-        count_query = "SELECT COUNT(*) FROM REGISTROS r WHERE 1=1"
+        count_query = "SELECT COUNT(*) FROM REGISTROS r LEFT JOIN BOBINA b ON r.BOBINA_ID_BOBI = b.ID_BOBI LEFT JOIN PROVEEDOR p ON r.PROVEEDOR_ID_PROV = p.ID_PROV WHERE 1=1"
         if search:
-            count_query += " AND (r.PEDIDO_COMPRA LIKE :search OR r.COLADA LIKE :search OR r.OBSERVACIONES LIKE :search)"
-        
+            count_query += " AND (r.PEDIDO_COMPRA LIKE :search OR r.COLADA LIKE :search OR r.OBSERVACIONES LIKE :search OR p.NOMBRE_PROV LIKE :search OR b.DESC_BOBI LIKE :search OR r.COD_BOBIN2 LIKE :search)"
+            
         total = db.session.execute(text(count_query), params).scalar()
         total_pages = (total + per_page - 1) // per_page
 
         # Consulta con paginación
-        query += " ORDER BY r.ID_REGISTRO DESC OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY"
+        query += " ORDER BY r.FECHA_INGRESO_PLANTA ASC OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY"  # ✅ Orden ascendente
         params['offset'] = (page - 1) * per_page
         params['limit'] = per_page
 
         result = db.session.execute(text(query), params)
-        
+
         registros = []
         for row in result:
             registro = {}

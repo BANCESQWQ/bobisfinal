@@ -1,158 +1,170 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
-
-export interface Pedido {
-  id: number;
-  numero_pedido: string;
-  cliente: string;
-  fecha_creacion: string;
-  estado: 'pendiente' | 'procesando' | 'completado' | 'cancelado';
-  total: number;
-  items: PedidoItem[];
-}
-
-export interface PedidoItem {
-  id: number;
-  producto: string;
-  cantidad: number;
-  precio_unitario: number;
-  subtotal: number;
-}
+import { RegistroService, Registro } from '../../services/registro.service';
+import { UserViewModal } from '../user-view-modal/user-view-modal';
+import { DetallesPedido } from '../detalles-pedido/detalles-pedido';
 
 @Component({
   selector: 'app-pedidos',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, UserViewModal, DetallesPedido],
   templateUrl: './pedidos.html',
   styleUrl: './pedidos.scss'
 })
 export class Pedidos implements OnInit {
-  pedidos: Pedido[] = [];
-  filteredPedidos: Pedido[] = [];
-  searchTerm: string = '';
-  currentPage: number = 1;
-  perPage: number = 10;
-  totalPedidos: number = 0;
-  
-  // Estados para nuevo pedido
-  showNuevoPedidoModal = false;
-  nuevoPedido: Partial<Pedido> = {
-    cliente: '',
-    items: []
-  };
-  nuevoItem: Partial<PedidoItem> = {
-    producto: '',
-    cantidad: 1,
-    precio_unitario: 0
-  };
+  registros: Registro[] = [];
+  filteredRegistros: Registro[] = [];
+  registrosSeleccionados: Registro[] = [];
+  isLoading = true;
+  searchTerm = '';
+  observacionesDespacho = '';
+  selectedRegistro: Registro | null = null;
+  showViewModal = false;
+  showDetallesPedidoModal = false;
+
+  // Variables para drag and drop
+  dragItem: Registro | null = null;
+
+  constructor(private registroService: RegistroService) {}
 
   ngOnInit() {
-    this.cargarPedidosEjemplo();
+    this.loadRegistros();
   }
 
-  cargarPedidosEjemplo() {
-    // Datos de ejemplo
-    this.pedidos = [
-      {
-        id: 1,
-        numero_pedido: 'PED-2024-001',
-        cliente: 'Cliente A',
-        fecha_creacion: '2024-01-15',
-        estado: 'pendiente',
-        total: 1500.00,
-        items: [
-          { id: 1, producto: 'Bobina Acero 1m', cantidad: 2, precio_unitario: 500, subtotal: 1000 },
-          { id: 2, producto: 'Bobina Aluminio 0.5m', cantidad: 1, precio_unitario: 500, subtotal: 500 }
-        ]
-      },
-      {
-        id: 2,
-        numero_pedido: 'PED-2024-002',
-        cliente: 'Cliente B',
-        fecha_creacion: '2024-01-14',
-        estado: 'procesando',
-        total: 2750.00,
-        items: [
-          { id: 1, producto: 'Bobina Cobre 2m', cantidad: 1, precio_unitario: 1500, subtotal: 1500 },
-          { id: 2, producto: 'Bobina Acero 1.5m', cantidad: 1, precio_unitario: 1250, subtotal: 1250 }
-        ]
-      }
-    ];
-    this.filteredPedidos = [...this.pedidos];
-    this.totalPedidos = this.pedidos.length;
+  loadRegistros() {
+    this.isLoading = true;
+    this.registroService.getRegistros(1, 100, '')
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.registros = response.data;
+            this.filteredRegistros = this.ordenarRegistros(response.data);
+          }
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error cargando registros:', error);
+          this.isLoading = false;
+        }
+      });
   }
 
-  getEstadoClass(estado: string): string {
-    switch (estado) {
-      case 'pendiente': return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
-      case 'procesando': return 'bg-blue-100 text-blue-800 border border-blue-200';
-      case 'completado': return 'bg-green-100 text-green-800 border border-green-200';
-      case 'cancelado': return 'bg-red-100 text-red-800 border border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border border-gray-200';
+  ordenarRegistros(registros: Registro[]): Registro[] {
+    return registros.sort((a, b) => {
+      const dateA = new Date(a.fecha_ingreso_planta || '');
+      const dateB = new Date(b.fecha_ingreso_planta || '');
+      return dateA.getTime() - dateB.getTime();
+    });
+  }
+getStatusClass(estadoId: number): string {
+  const statusMap: { [key: number]: string } = {
+    1: 'bg-green-100 text-green-800 border-green-200',
+    2: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    3: 'bg-red-100 text-red-800 border-red-200',
+    4: 'bg-blue-100 text-blue-800 border-blue-200'
+  };
+  return statusMap[estadoId] || 'bg-gray-100 text-gray-800 border-gray-200';
+}
+
+getEstadoText(estadoId: number): string {
+  const estadoMap: { [key: number]: string } = {
+    1: 'Activo',
+    2: 'Pendiente',
+    3: 'Inactivo',
+    4: 'Procesando'
+  };
+  return estadoMap[estadoId] || 'Desconocido';
+}
+  aplicarFiltros() {
+    if (!this.searchTerm.trim()) {
+      this.filteredRegistros = this.ordenarRegistros(this.registros);
+      return;
+    }
+
+    const searchLower = this.searchTerm.toLowerCase();
+    this.filteredRegistros = this.ordenarRegistros(
+      this.registros.filter(registro =>
+        registro.bobina_desc?.toLowerCase().includes(searchLower) ||
+        registro.colada?.toLowerCase().includes(searchLower) ||
+        registro.lote?.toString().includes(searchLower) ||
+        registro.cod_bobin2?.toString().includes(searchLower)
+      )
+    );
+  }
+
+  // Drag and Drop functions
+  onDragStart(registro: Registro, event: DragEvent) {
+    this.dragItem = registro;
+    event.dataTransfer?.setData('text/plain', registro.id_registro.toString());
+  }
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    if (this.dragItem && !this.estaSeleccionado(this.dragItem)) {
+      this.seleccionarRegistro(this.dragItem);
+    }
+    this.dragItem = null;
+  }
+
+  // Gestión de selección
+  seleccionarRegistro(registro: Registro) {
+    if (!this.estaSeleccionado(registro)) {
+      this.registrosSeleccionados.push(registro);
     }
   }
 
-  getEstadoText(estado: string): string {
-    switch (estado) {
-      case 'pendiente': return 'Pendiente';
-      case 'procesando': return 'Procesando';
-      case 'completado': return 'Completado';
-      case 'cancelado': return 'Cancelado';
-      default: return estado;
-    }
+  quitarRegistro(registro: Registro) {
+    this.registrosSeleccionados = this.registrosSeleccionados.filter(
+      r => r.id_registro !== registro.id_registro
+    );
   }
 
-  abrirNuevoPedido() {
-    this.showNuevoPedidoModal = true;
-    this.nuevoPedido = {
-      cliente: '',
-      items: []
+  estaSeleccionado(registro: Registro): boolean {
+    return this.registrosSeleccionados.some(
+      r => r.id_registro === registro.id_registro
+    );
+  }
+
+  // Modals
+  verDetalles(registro: Registro, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.selectedRegistro = registro;
+    this.showViewModal = true;
+  }
+
+  verDetallesPedido() {
+    this.showDetallesPedidoModal = true;
+  }
+
+  closeModals() {
+    this.showViewModal = false;
+    this.showDetallesPedidoModal = false;
+    this.selectedRegistro = null;
+  }
+
+  // Envío de despacho
+  enviarDespacho() {
+    if (this.registrosSeleccionados.length === 0) {
+      alert('Por favor selecciona al menos un registro para despachar');
+      return;
+    }
+
+    const despachoData = {
+      registros: this.registrosSeleccionados.map(r => r.id_registro),
+      observaciones: this.observacionesDespacho,
+      fecha: new Date().toISOString()
     };
-  }
 
-  agregarItem() {
-    if (this.nuevoItem.producto && this.nuevoItem.cantidad && this.nuevoItem.precio_unitario) {
-      const subtotal = this.nuevoItem.cantidad * this.nuevoItem.precio_unitario;
-      const item: PedidoItem = {
-        id: (this.nuevoPedido.items?.length || 0) + 1,
-        producto: this.nuevoItem.producto!,
-        cantidad: this.nuevoItem.cantidad!,
-        precio_unitario: this.nuevoItem.precio_unitario!,
-        subtotal: subtotal
-      };
-      
-      this.nuevoPedido.items = [...(this.nuevoPedido.items || []), item];
-      this.nuevoItem = { producto: '', cantidad: 1, precio_unitario: 0 };
-    }
-  }
-
-  eliminarItem(index: number) {
-    this.nuevoPedido.items?.splice(index, 1);
-  }
-
-  calcularTotal(): number {
-    return this.nuevoPedido.items?.reduce((total, item) => total + item.subtotal, 0) || 0;
-  }
-
-  crearPedido() {
-    if (this.nuevoPedido.cliente && this.nuevoPedido.items && this.nuevoPedido.items.length > 0) {
-      const nuevoPedido: Pedido = {
-        id: this.pedidos.length + 1,
-        numero_pedido: `PED-2024-${String(this.pedidos.length + 1).padStart(3, '0')}`,
-        cliente: this.nuevoPedido.cliente,
-        fecha_creacion: new Date().toISOString().split('T')[0],
-        estado: 'pendiente',
-        total: this.calcularTotal(),
-        items: this.nuevoPedido.items
-      };
-
-      this.pedidos.unshift(nuevoPedido);
-      this.filteredPedidos = [...this.pedidos];
-      this.showNuevoPedidoModal = false;
-      
-      alert('Pedido creado exitosamente!');
-    }
+    console.log('Enviando despacho:', despachoData);
+    alert(`Despacho enviado con ${this.registrosSeleccionados.length} registros`);
+    this.registrosSeleccionados = [];
+    this.observacionesDespacho = '';
   }
 }
