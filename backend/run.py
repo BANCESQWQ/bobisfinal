@@ -82,7 +82,7 @@ def actualizar_registro(id_registro):
             'success': False,
             'error': f'Error al actualizar registro: {str(e)}'
         }), 500
-# Endpoints para Gestión de Tablas Maestras
+
 @app.route('/api/gestion/<tabla>', methods=['GET'])
 def get_tabla_gestion(tabla):
     try:
@@ -94,7 +94,7 @@ def get_tabla_gestion(tabla):
                 'error': f'Tabla {tabla} no permitida'
             }), 400
 
-        # Consulta dinámica según la tabla
+        # Construir query según tabla
         if tabla == 'UBICACION':
             query = "SELECT ID_UBI, DESC_UBI FROM UBICACION ORDER BY ID_UBI"
         elif tabla == 'BARCO':
@@ -110,15 +110,13 @@ def get_tabla_gestion(tabla):
 
         result = db.session.execute(text(query))
         datos = []
-        
+
         for row in result:
             dato = {}
             for idx, column in enumerate(result.keys()):
                 value = row[idx]
-                if hasattr(value, 'isoformat'):
-                    dato[column.lower()] = value.isoformat()
-                else:
-                    dato[column.lower()] = value
+                # MANTENER LOS NOMBRES DE CAMPOS EN MAYÚSCULAS
+                dato[column] = value.isoformat() if hasattr(value, 'isoformat') else value
             datos.append(dato)
 
         return jsonify({
@@ -127,7 +125,7 @@ def get_tabla_gestion(tabla):
         })
 
     except Exception as e:
-        print(f'Error obteniendo datos de {tabla}:', str(e))
+        print(f"Error obteniendo datos de {tabla}:", str(e))
         return jsonify({
             'success': False,
             'error': str(e)
@@ -137,7 +135,7 @@ def get_tabla_gestion(tabla):
 def agregar_registro_gestion(tabla):
     try:
         data = request.get_json()
-        print(f'Agregando registro a {tabla}:', data)
+        print(f"Agregando registro a {tabla}:", data)
 
         tablas_permitidas = ['UBICACION', 'BARCO', 'MOLINO', 'PROVEEDOR', 'ESTADO', 'PROCEDENCIA']
         if tabla not in tablas_permitidas:
@@ -146,28 +144,28 @@ def agregar_registro_gestion(tabla):
                 'error': f'Tabla {tabla} no permitida'
             }), 400
 
-        # Construir query de inserción dinámica
+        # Construir query de inserción según tabla - USAR MAYÚSCULAS
         if tabla == 'UBICACION':
-            query = "INSERT INTO UBICACION (DESC_UBI) VALUES (:desc_ubi)"
-            params = {'desc_ubi': data['desc_ubi']}
+            query = "INSERT INTO UBICACION (DESC_UBI) VALUES (:DESC_UBI)"
+            params = {'DESC_UBI': data['DESC_UBI']}
         elif tabla == 'BARCO':
-            query = "INSERT INTO BARCO (NOMBRE_BARCO) VALUES (:nombre_barco)"
-            params = {'nombre_barco': data['nombre_barco']}
+            query = "INSERT INTO BARCO (NOMBRE_BARCO) VALUES (:NOMBRE_BARCO)"
+            params = {'NOMBRE_BARCO': data['NOMBRE_BARCO']}
         elif tabla == 'MOLINO':
-            query = "INSERT INTO MOLINO (NOMBRE_MOLINO, PROCEDENCIA_ID_PROCED) VALUES (:nombre_molino, :procedencia_id_proced)"
+            query = "INSERT INTO MOLINO (NOMBRE_MOLINO, PROCEDENCIA_ID_PROCED) VALUES (:NOMBRE_MOLINO, :PROCEDENCIA_ID_PROCED)"
             params = {
-                'nombre_molino': data['nombre_molino'],
-                'procedencia_id_proced': data['procedencia_id_proced']
+                'NOMBRE_MOLINO': data['NOMBRE_MOLINO'],
+                'PROCEDENCIA_ID_PROCED': data['PROCEDENCIA_ID_PROCED']
             }
         elif tabla == 'PROVEEDOR':
-            query = "INSERT INTO PROVEEDOR (NOMBRE_PROV) VALUES (:nombre_prov)"
-            params = {'nombre_prov': data['nombre_prov']}
+            query = "INSERT INTO PROVEEDOR (NOMBRE_PROV) VALUES (:NOMBRE_PROV)"
+            params = {'NOMBRE_PROV': data['NOMBRE_PROV']}
         elif tabla == 'ESTADO':
-            query = "INSERT INTO ESTADO (DESC_ESTADO) VALUES (:desc_estado)"
-            params = {'desc_estado': data['desc_estado']}
+            query = "INSERT INTO ESTADO (DESC_ESTADO) VALUES (:DESC_ESTADO)"
+            params = {'DESC_ESTADO': data['DESC_ESTADO']}
         elif tabla == 'PROCEDENCIA':
-            query = "INSERT INTO PROCEDENCIA (DESC_PROCED) VALUES (:desc_proced)"
-            params = {'desc_proced': data['desc_proced']}
+            query = "INSERT INTO PROCEDENCIA (DESC_PROCED) VALUES (:DESC_PROCED)"
+            params = {'DESC_PROCED': data['DESC_PROCED']}
 
         result = db.session.execute(text(query), params)
         db.session.commit()
@@ -179,7 +177,7 @@ def agregar_registro_gestion(tabla):
 
     except Exception as e:
         db.session.rollback()
-        print(f'Error agregando registro a {tabla}:', str(e))
+        print(f"Error agregando registro a {tabla}:", str(e))
         return jsonify({
             'success': False,
             'error': str(e)
@@ -195,7 +193,7 @@ def eliminar_registro_gestion(tabla, id):
                 'error': f'Tabla {tabla} no permitida'
             }), 400
 
-        # Construir query de eliminación dinámica
+        # Construir query de eliminación según tabla
         if tabla == 'UBICACION':
             query = "DELETE FROM UBICACION WHERE ID_UBI = :id"
         elif tabla == 'BARCO':
@@ -225,7 +223,7 @@ def eliminar_registro_gestion(tabla, id):
 
     except Exception as e:
         db.session.rollback()
-        print(f'Error eliminando registro de {tabla}:', str(e))
+        print(f"Error eliminando registro de {tabla}:", str(e))
         return jsonify({
             'success': False,
             'error': str(e)
@@ -484,7 +482,74 @@ def get_opciones_combos():
             'success': False,
             'error': str(e)
         }), 500
-
+# Endpoints para Dashboard
+@app.route('/api/dashboard/estadisticas', methods=['GET'])
+def get_estadisticas_dashboard():
+    try:
+        # Estadísticas generales
+        query_total_bobinas = "SELECT COUNT(*) as total FROM REGISTROS WHERE ESTADO_ID_ESTADO = 1"
+        query_pedidos_pendientes = "SELECT COUNT(*) as pendientes FROM PEDIDO_CAB WHERE ESTADO_PEDIDO_ID = 2"
+        query_promedio_peso = "SELECT AVG(PESO) as promedio FROM REGISTROS"
+        
+        total_bobinas = db.session.execute(text(query_total_bobinas)).fetchone()[0]
+        pedidos_pendientes = db.session.execute(text(query_pedidos_pendientes)).fetchone()[0]
+        promedio_peso = db.session.execute(text(query_promedio_peso)).fetchone()[0] or 0
+        
+        # Bobinas más usadas (simplificado)
+        query_bobinas_usadas = """
+        SELECT B.DESC_BOBI, COUNT(R.ID_REGISTRO) as cantidad 
+        FROM REGISTROS R 
+        JOIN BOBINA B ON R.BOBINA_ID_BOBI = B.ID_BOBI 
+        GROUP BY B.DESC_BOBI 
+        ORDER BY cantidad DESC 
+        LIMIT 5
+        """
+        
+        bobinas_usadas_result = db.session.execute(text(query_bobinas_usadas))
+        bobinas_usadas = []
+        for row in bobinas_usadas_result:
+            bobinas_usadas.append({
+                'bobina': row[0],
+                'cantidad': row[1]
+            })
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'estadisticasGenerales': {
+                    'totalBobinas': total_bobinas,
+                    'pedidosPendientes': pedidos_pendientes,
+                    'promedioPeso': round(float(promedio_peso), 2)
+                },
+                'bobinasMasUsadas': bobinas_usadas,
+                'proximosPedidos': [
+                    {'fecha': '2025-11-20', 'cantidad': 15},
+                    {'fecha': '2025-11-25', 'cantidad': 22},
+                    {'fecha': '2025-12-01', 'cantidad': 18}
+                ],
+                'prediccionYear': [
+                    {'mes': 'Ene', 'pedidos': 120},
+                    {'mes': 'Feb', 'pedidos': 135},
+                    {'mes': 'Mar', 'pedidos': 142},
+                    {'mes': 'Abr', 'pedidos': 128},
+                    {'mes': 'May', 'pedidos': 155},
+                    {'mes': 'Jun', 'pedidos': 148},
+                    {'mes': 'Jul', 'pedidos': 162},
+                    {'mes': 'Ago', 'pedidos': 158},
+                    {'mes': 'Sep', 'pedidos': 145},
+                    {'mes': 'Oct', 'pedidos': 138},
+                    {'mes': 'Nov', 'pedidos': 152},
+                    {'mes': 'Dic', 'pedidos': 168}
+                ]
+            }
+        })
+        
+    except Exception as e:
+        print("Error obteniendo estadísticas del dashboard:", str(e))
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 @app.route('/api/registros/actualizar-estado', methods=['PUT'])
 def actualizar_estado_registros():
     try:
