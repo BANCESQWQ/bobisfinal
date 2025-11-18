@@ -38,20 +38,20 @@ export interface Proveedor {
 
 export interface Bobina {
   id: number;
-  descripcion: string;
-  laminacion: string;
+  description: string;
+  lamination: string;
   espesor: number;
   ancho: number;
 }
 
 export interface Estado {
   id: number;
-  descripcion: string;
+  description: string;
 }
 
 export interface Ubicacion {
   id: number;
-  descripcion: string;
+  description: string;
 }
 
 export interface RegistrosResponse {
@@ -87,6 +87,24 @@ export class RegistroService {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('per_page', perPage.toString());
+
+    if (search) {
+      params = params.set('search', search);
+    }
+
+    return this.http.get<BackendResponse>(`${this.apiUrl}/registros`, { params })
+      .pipe(
+        map(response => this.adaptResponse(response, page, perPage)),
+        catchError(this.handleError)
+      );
+  }
+
+  // Obtener solo registros disponibles (estado_id_estado = 1)
+  getRegistrosDisponibles(page: number = 1, perPage: number = 100, search: string = ''): Observable<RegistrosResponse> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('per_page', perPage.toString())
+      .set('estado', '1'); // Solo disponibles (estado = 1)
 
     if (search) {
       params = params.set('search', search);
@@ -135,17 +153,71 @@ export class RegistroService {
       );
   }
 
-  // Obtener estadísticas
+  // Obtener estadisticas
   getEstadisticas(): Observable<any> {
     return this.http.get(`${this.apiUrl}/estadisticas`)
       .pipe(
         catchError(this.handleError)
       );
   }
+// Obtener registros por estado
+getRegistrosPorEstado(estadoId: number): Observable<RegistrosResponse> {
+  let params = new HttpParams()
+    .set('page', '1')
+    .set('per_page', '1000')
+    .set('estado', estadoId.toString());
+
+  return this.http.get<BackendResponse>(`${this.apiUrl}/registros`, { params })
+    .pipe(
+      map(response => this.adaptResponse(response, 1, 1000)),
+      catchError(this.handleError)
+    );
+}
+
+// Actualizar estado de múltiples registros
+actualizarEstadoRegistros(idsRegistros: number[], nuevoEstadoId: number): Observable<any> {
+  return this.http.put(`${this.apiUrl}/registros/actualizar-estado`, {
+    ids_registros: idsRegistros,
+    nuevo_estado_id: nuevoEstadoId
+  }).pipe(
+    catchError(this.handleError)
+  );
+}
+
+// Obtener opciones para combos
+getOpcionesParaCombos(): Observable<any> {
+  return this.http.get(`${this.apiUrl}/opciones-combos`)
+    .pipe(
+      catchError(this.handleError)
+    );
+}
+  // Actualizar registro
+  actualizarRegistro(id: number, registroData: any): Observable<any> {
+    console.log('Actualizando registro:', id, registroData);
+    
+    return this.http.put(`${this.apiUrl}/registros/${id}`, registroData)
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          console.error('Error actualizando registro:', error);
+          let errorMessage = 'Error desconocido al actualizar el registro';
+          
+          if (error.error instanceof ErrorEvent) {
+            errorMessage = `Error: ${error.error.message}`;
+          } else {
+            errorMessage = `Error ${error.status}: ${error.message}`;
+            if (error.error && error.error.error) {
+              errorMessage += ` - ${error.error.error}`;
+            }
+          }
+          
+          return throwError(() => new Error(errorMessage));
+        })
+      );
+  }
 
   // Adaptar la respuesta del backend a la estructura que espera Angular
   private adaptResponse(response: BackendResponse, page: number, perPage: number): RegistrosResponse {
-    console.log('🔄 Procesando respuesta del backend:', response);
+    console.log('  Procesando respuesta del backend', response);
 
     // Mapear los campos del backend a la interfaz Registro
     const registros: Registro[] = response.data.map((item: any) => {
@@ -175,14 +247,14 @@ export class RegistroService {
         molino_nombre: item.molino_nombre || 'Sin molino',
         n_bobi_proveedor: item.n_bobi_proveedor || '',
         bobi_correlativo: item.bobi_correlativo || 0,
-        cod_bobin2: item.cod_bobin2 || undefined // ✅ Agregar este campo
+        cod_bobin2: item.cod_bobin2 || undefined
       };
     });
 
     const total = response.total || response.pagination?.total || registros.length;
     const pages = Math.ceil(total / perPage);
 
-    console.log('✅ Respuesta adaptada:', {
+    console.log('☐ Respuesta adaptada:', {
       registrosCount: registros.length,
       total: total,
       pages: pages,

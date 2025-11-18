@@ -22,11 +22,14 @@ export class Sidebar {
   isSidebarOpen = true;
 
   menuItems: MenuItem[] = [
-    { label: 'Dashboard', route: '/dashboard', isActive: true },
-    { label: 'Registros', route: '/datatables', isActive: false },
-    { label: 'Pedidos', route: '/pedidos', isActive: false },
-    { label: 'Configuración', route: '/settings', isActive: false },
-  ];
+  { label: 'Dashboard', route: '/dashboard', isActive: true },
+  { label: 'Registros', route: '/datatables', isActive: false },
+  { label: 'Pedidos', route: '/pedidos', isActive: false },
+  { label: 'Checklist Despacho', route: '/checklist-despacho', isActive: false },
+  { label: 'Historial Despachos', route: '/historial-despachos', isActive: false },
+  { label: 'Gestión', route: '/gestion', isActive: false },
+  { label: 'Configuración', route: '/settings', isActive: false },
+];
 
   toggleSidebar() {
     this.isSidebarOpen = !this.isSidebarOpen;

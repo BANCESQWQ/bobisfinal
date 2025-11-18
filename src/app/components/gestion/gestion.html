@@ -1,0 +1,144 @@
+<div class="p-6 space-y-6">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-2xl shadow-lg p-6 text-white">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold mb-2">Gestión del Sistema</h1>
+        <p class="text-indigo-100 opacity-90">Administra las tablas maestras del sistema</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensajes -->
+  <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 rounded-lg p-4">
+    <p class="text-red-800 text-sm">❌ {{ errorMessage }}</p>
+  </div>
+
+  <div *ngIf="successMessage" class="bg-green-50 border border-green-200 rounded-lg p-4">
+    <p class="text-green-800 text-sm">✅ {{ successMessage }}</p>
+  </div>
+
+  <!-- Pestañas de Tablas -->
+  <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+    <div class="flex overflow-x-auto border-b border-gray-200">
+      <button
+        *ngFor="let tabla of tablas"
+        (click)="cambiarTabla(tabla)"
+        [class]="tablaActiva?.nombre === tabla.nombre
+          ? 'border-b-2 border-indigo-500 text-indigo-600 font-semibold'
+          : 'text-gray-500 hover:text-gray-700'"
+        class="px-6 py-3 whitespace-nowrap transition-colors"
+      >
+        {{ tabla.nombreDisplay }}
+      </button>
+    </div>
+
+    <!-- Contenido de la Tabla Activa -->
+    <div *ngIf="tablaActiva" class="p-6">
+      <!-- Formulario para Agregar -->
+      <div class="bg-gray-50 rounded-lg p-4 mb-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Agregar Nuevo Registro</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div *ngFor="let campo of tablaActiva.campos">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              {{ campo.display }}
+              <span *ngIf="campo.requerido" class="text-red-500">*</span>
+            </label>
+            
+            <!-- Input normal -->
+            <input
+              *ngIf="campo.tipo === 'text' || campo.tipo === 'number'"
+              [type]="campo.tipo"
+              [(ngModel)]="nuevoRegistro[campo.nombre]"
+              [placeholder]="campo.display"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+              [required]="campo.requerido"
+            >
+            
+            <!-- Select para combos -->
+            <select
+              *ngIf="campo.tipo === 'select'"
+              [(ngModel)]="nuevoRegistro[campo.nombre]"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+              [required]="campo.requerido"
+            >
+              <option value="">Seleccionar {{ campo.display }}</option>
+              <option *ngFor="let opcion of campo.opciones" [value]="opcion.ID_PROCED">
+                {{ opcion.DESC_PROCED }}
+              </option>
+            </select>
+          </div>
+        </div>
+        <button
+          (click)="agregarRegistro()"
+          [disabled]="isLoading"
+          class="mt-4 bg-indigo-500 text-white px-6 py-2 rounded-lg hover:bg-indigo-600 transition-colors font-medium disabled:opacity-50 flex items-center gap-2"
+        >
+          <svg *ngIf="isLoading" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          {{ isLoading ? 'Agregando...' : 'Agregar Registro' }}
+        </button>
+      </div>
+
+      <!-- Tabla de Datos -->
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
+                {{ getNombreId() }}
+              </th>
+              <th *ngFor="let campo of tablaActiva.campos" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
+                {{ campo.display }}
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <tr *ngFor="let registro of datosTabla" class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                {{ getIdValor(registro) }}
+              </td>
+              <td *ngFor="let campo of tablaActiva.campos" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <!-- Mostrar descripción para campos de selección -->
+                <span *ngIf="campo.tipo === 'select'">
+                  {{ getDescripcionOpcion(campo, registro[campo.nombre]) }}
+                </span>
+                <!-- Mostrar valor normal para otros campos -->
+                <span *ngIf="campo.tipo !== 'select'">
+                  {{ registro[campo.nombre] }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <button
+                  (click)="eliminarRegistro(registro)"
+                  [disabled]="isLoading"
+                  class="text-red-600 hover:text-red-800 font-medium disabled:opacity-50 transition-colors"
+                >
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Mensaje cuando no hay datos -->
+        <div *ngIf="datosTabla.length === 0 && !isLoading" class="text-center py-12 text-gray-500">
+          <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <p class="text-lg font-medium text-gray-600">No hay registros en esta tabla</p>
+          <p class="text-sm text-gray-500 mt-1">Usa el formulario superior para agregar nuevos registros</p>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="isLoading" class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+        <span class="ml-3 text-gray-600">Cargando datos...</span>
+      </div>
+    </div>
+  </div>
+</div>

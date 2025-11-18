@@ -1,0 +1,242 @@
+<div class="p-6 space-y-6">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold mb-2">Checklist de Despacho</h1>
+        <p class="text-purple-100 opacity-90">Verifica y confirma pedidos listos para despacho</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenido Principal -->
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+    <!-- Panel Izquierdo - Pedidos Pendientes -->
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200 p-4">
+        <h3 class="text-lg font-semibold text-orange-800">
+          Pedidos Pendientes
+          <span class="text-sm font-normal text-orange-600 ml-2">
+            ({{ pedidosPendientes.length }} resultados)
+          </span>
+        </h3>
+        <p class="text-sm text-orange-600 mt-1">Selecciona un pedido para verificar</p>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="isLoading" class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        <span class="ml-3 text-gray-600">Cargando pedidos pendientes...</span>
+      </div>
+
+      <!-- Lista de Pedidos -->
+      <div *ngIf="!isLoading" class="p-4 space-y-4">
+        <div
+          *ngFor="let pedido of pedidosPendientes"
+          [class.bg-orange-50]="pedidoSeleccionado?.id_pedido === pedido.id_pedido"
+          [class.border-orange-300]="pedidoSeleccionado?.id_pedido === pedido.id_pedido"
+          class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer"
+          (click)="seleccionarPedido(pedido)"
+        >
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <h4 class="font-semibold text-gray-800 text-lg">Pedido #{{ pedido.id_pedido }}</h4>
+              <p class="text-gray-600 text-sm">{{ pedido.solicitante }}</p>
+            </div>
+            <span 
+              class="px-2 py-1 text-xs font-semibold rounded-full border"
+              [class]="getEstadoClass(pedido.estado_pedido)"
+            >
+              {{ pedido.estado_pedido }}
+            </span>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-2 text-sm text-gray-600">
+            <div>
+              <span class="font-medium">Fecha:</span>
+              <span>{{ formatearFecha(pedido.fecha_pedido) }}</span>
+            </div>
+            <div>
+              <span class="font-medium">Bobinas:</span>
+              <span>{{ pedido.bobinas_count }}</span>
+            </div>
+            <div class="col-span-2">
+              <span class="font-medium">Observaciones:</span>
+              <span class="text-gray-700">{{ pedido.observaciones || 'Ninguna' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mensaje cuando no hay pedidos -->
+        <div *ngIf="pedidosPendientes.length === 0" class="text-center py-12 text-gray-500">
+          <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <p class="text-lg font-medium text-gray-600">No hay pedidos pendientes</p>
+          <p class="text-sm text-gray-500 mt-1">Todos los pedidos han sido procesados</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Derecho - Detalles del Pedido Seleccionado -->
+    <div
+      *ngIf="pedidoSeleccionado"
+      class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden"
+    >
+      <div class="bg-gradient-to-r from-green-50 to-green-100 border-b border-green-200 p-4">
+        <div class="flex justify-between items-center">
+          <div>
+            <h3 class="text-lg font-semibold text-green-800">
+              Verificación de Pedido #{{ pedidoSeleccionado.id_pedido }}
+            </h3>
+            <p class="text-sm text-green-600 mt-1">Marca TODAS las bobinas como verificadas</p>
+          </div>
+          <div class="text-sm text-green-700">
+            <!-- CORREGIDO: Usar el getter en lugar de la lógica en el template -->
+            <span class="font-semibold">{{ bobinasSeleccionadasCount }}</span>
+            /{{ bobinasPedido.length }} seleccionadas
+          </div>
+        </div>
+      </div>
+
+      <!-- Información del Pedido -->
+      <div class="p-4 border-b border-gray-200">
+        <div class="grid grid-cols-2 gap-4 text-sm text-gray-600">
+          <div>
+            <span class="font-medium">Solicitante:</span>
+            <span>{{ pedidoSeleccionado.solicitante }}</span>
+          </div>
+          <div>
+            <span class="font-medium">Fecha:</span>
+            <span>{{ formatearFecha(pedidoSeleccionado.fecha_pedido) }}</span>
+          </div>
+          <div class="col-span-2">
+            <span class="font-medium">Observaciones:</span>
+            <span class="text-gray-700">{{ pedidoSeleccionado.observaciones || 'Ninguna' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lista de Bobinas para Verificar -->
+      <div class="p-4 space-y-3 max-h-96 overflow-y-auto">
+        <div
+          *ngFor="let bobina of bobinasPedido"
+          [class.bg-green-50]="bobina.seleccionada"
+          [class.border-green-300]="bobina.seleccionada"
+          class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer"
+          (click)="toggleSeleccionBobina(bobina)"
+        >
+          <div class="flex items-start space-x-4">
+            <!-- Checkbox -->
+            <div class="flex items-center h-5 mt-1">
+              <input
+                type="checkbox"
+                [checked]="bobina.seleccionada"
+                (change)="toggleSeleccionBobina(bobina)"
+                class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+              >
+            </div>
+
+            <!-- Información de la Bobina -->
+            <div class="flex-1">
+              <div class="flex justify-between items-start mb-2">
+                <div>
+                  <h4 class="font-semibold text-gray-800">#{{ bobina.id_registro }}</h4>
+                  <p class="text-gray-600 text-sm">{{ bobina.bobina_desc }}</p>
+                </div>
+                <span class="font-semibold text-green-600">{{ bobina.peso }} kg</span>
+              </div>
+              
+              <div class="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                <div>
+                  <span class="font-medium">Pedido:</span> {{ bobina.pedido_compra }}
+                </div>
+                <div>
+                  <span class="font-medium">Colada:</span> {{ bobina.colada }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resumen y Botón Confirmar -->
+      <div class="border-t border-gray-200 p-4">
+        <div class="flex justify-between items-center mb-4">
+          <div class="text-sm text-gray-600">
+            <span class="font-medium">Peso total:</span>
+            <span class="font-semibold text-green-600 ml-2">{{ calcularPesoTotal() }} kg</span>
+            <span class="text-gray-500 ml-2">({{ (calcularPesoTotal() / 1000).toFixed(3) }} ton)</span>
+          </div>
+        </div>
+
+        <button
+          (click)="confirmarDespacho()"
+          [disabled]="!todasBobinasSeleccionadas"
+          class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 px-4 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 font-semibold shadow-lg shadow-green-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          <!-- CORREGIDO: Usar el getter -->
+          {{ todasBobinasSeleccionadas ? 'Confirmar Despacho' : 'Selecciona todas las bobinas' }}
+        </button>
+        
+        <!-- CORREGIDO: Usar los getters -->
+        <div *ngIf="!todasBobinasSeleccionadas && algunaBobinaSeleccionada" class="mt-2 text-center">
+          <p class="text-xs text-yellow-600">⚠ Debes seleccionar TODAS las bobinas para confirmar el despacho</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensaje cuando no hay pedido seleccionado -->
+    <div *ngIf="!pedidoSeleccionado && !isLoading" class="xl:col-span-2 text-center py-12 text-gray-500">
+      <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+      </svg>
+      <p class="text-lg font-medium text-gray-600">Selecciona un pedido para verificar</p>
+      <p class="text-sm text-gray-500 mt-1">Haz click en un pedido de la lista para comenzar la verificación</p>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmación -->
+  <div *ngIf="showConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="p-6">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">Confirmar Despacho</h3>
+        <p class="text-gray-600 mb-6">
+          ¿Estás seguro de que quieres marcar <strong>{{ bobinasPedido.length }}</strong> bobina(s) como despachadas?
+        </p>
+        
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+          <p class="text-yellow-800 text-sm">
+            <strong>⚠ Advertencia:</strong> Esta acción cambiará el estado de las bobinas y no se puede deshacer.
+          </p>
+        </div>
+
+        <!-- Lista de bobinas a confirmar -->
+        <div class="max-h-40 overflow-y-auto mb-4">
+          <div *ngFor="let bobina of bobinasPedido" class="flex items-center space-x-2 py-2 border-b border-gray-100 last:border-b-0">
+            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+            <span class="text-sm text-gray-700">#{{ bobina.id_registro }} - {{ bobina.bobina_desc }}</span>
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-3">
+          <button
+            (click)="cancelarConfirmacion()"
+            class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+          >
+            Cancelar
+          </button>
+          <button
+            (click)="ejecutarConfirmacion()"
+            class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+          >
+            Confirmar Despacho
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

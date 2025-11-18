@@ -1,0 +1,271 @@
+<div class="p-6 space-y-6">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold mb-2">Historial de Despachos</h1>
+        <p class="text-blue-100 opacity-90">Seguimiento de todos los despachos realizados en el sistema</p>
+      </div>
+      <!-- Búsqueda -->
+      <div class="relative flex-1 max-w-2xl">
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (input)="aplicarFiltros()"
+          placeholder="Buscar por pedido, colada, bobina, proveedor..."
+          class="w-full pl-12 pr-4 py-3 rounded-xl bg-white bg-opacity-20 backdrop-blur-sm text-white placeholder-white placeholder-opacity-70 border border-white border-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all"
+        >
+        <div class="absolute left-4 top-3.5">
+          <svg class="w-5 h-5 text-white opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenido Principal -->
+  <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+    <!-- Header Tools -->
+    <div class="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200 p-4">
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-semibold text-gray-800">
+          Despachos Registrados
+          <span class="text-sm font-normal text-gray-600 ml-2">
+            ({{ filteredDespachos.length }} resultados)
+          </span>
+        </h3>
+        <button
+          (click)="cargarDespachos()"
+          class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors font-medium flex items-center gap-2"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          Actualizar
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="flex justify-center items-center py-12">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <span class="ml-3 text-gray-600">Cargando historial de despachos...</span>
+    </div>
+
+    <!-- Tabla -->
+    <div *ngIf="!isLoading" class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">ID Despacho</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Pedido</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Bobina</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Proveedor</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Peso</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Estado Pedido</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Despacho</th>
+            <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Fecha</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <tr
+            *ngFor="let despacho of filteredDespachos"
+            class="hover:bg-gray-50 transition-colors"
+          >
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+                {{ despacho.id_pedido_det }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-semibold text-gray-900">{{ despacho.pedido_compra }}</div>
+              <div class="text-sm text-gray-500">Colada: {{ despacho.colada }}</div>
+              <div class="text-xs text-gray-400">Pedido #{{ despacho.id_pedido }}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-semibold text-gray-900">{{ despacho.bobina_desc }}</div>
+              <div class="text-sm text-gray-500">Registro #{{ despacho.id_registro }}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm text-gray-900">{{ despacho.proveedor_nombre }}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-semibold text-green-600">{{ despacho.peso | number:'1.2-2' }} kg</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span
+                class="px-3 py-1 text-xs font-semibold rounded-full border"
+                [class]="getEstadoClass(despacho.estado_pedido)"
+              >
+                {{ despacho.estado_pedido }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span
+                class="px-3 py-1 text-xs font-semibold rounded-full border"
+                [class]="getDespachoClass(despacho.estado_despacho)"
+              >
+                {{ getDespachoText(despacho.estado_despacho) }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right">
+              <div class="text-sm text-gray-900">{{ formatearFecha(despacho.fecha_pedido) }}</div>
+              <div *ngIf="despacho.fecha_despacho" class="text-xs text-gray-500">
+                Desp: {{ formatearFecha(despacho.fecha_despacho) }}
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap space-x-2">
+              <button
+                (click)="verDetallesDespacho(despacho)"
+                class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600 transition-colors font-medium"
+              >
+                Ver Detalles
+              </button>
+              <button
+                (click)="exportarPDF(despacho)"
+                class="bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600 transition-colors font-medium"
+              >
+                Exportar PDF
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Mensaje cuando no hay despachos -->
+      <div *ngIf="filteredDespachos.length === 0" class="text-center py-12 text-gray-500">
+        <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <p class="text-lg font-medium text-gray-600">No se encontraron despachos</p>
+        <p class="text-sm text-gray-500 mt-1" *ngIf="searchTerm">Intenta con otros términos de búsqueda</p>
+        <p class="text-sm text-gray-500 mt-1" *ngIf="!searchTerm">No hay despachos registrados en el sistema</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Detalles del Despacho -->
+<div *ngIf="showDetailsModal && selectedDespacho" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-2xl font-bold">Detalles del Despacho</h2>
+          <p class="text-blue-100 opacity-90">ID: {{ selectedDespacho.id_pedido_det }} - Pedido: {{ selectedDespacho.id_pedido }}</p>
+        </div>
+        <button
+          (click)="cerrarModal()"
+          class="text-white hover:text-gray-200 transition-colors p-2"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Contenido -->
+    <div class="p-6 overflow-y-auto max-h-[70vh]">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Información del Despacho -->
+        <div class="space-y-4">
+          <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Información del Despacho</h3>
+          <div class="space-y-2">
+            <div class="flex justify-between">
+              <span class="font-medium text-gray-700">ID Despacho:</span>
+              <span class="text-gray-900">{{ selectedDespacho.id_pedido_det }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-medium text-gray-700">Pedido:</span>
+              <span class="text-gray-900">{{ selectedDespacho.id_pedido }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-medium text-gray-700">Estado:</span>
+              <span class="px-2 py-1 text-xs font-semibold rounded-full border" [class]="getEstadoClass(selectedDespacho.estado_pedido)">
+                {{ selectedDespacho.estado_pedido }}
+              </span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-medium text-gray-700">Despacho:</span>
+              <span class="px-2 py-1 text-xs font-semibold rounded-full border" [class]="getDespachoClass(selectedDespacho.estado_despacho)">
+                {{ getDespachoText(selectedDespacho.estado_despacho) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información de la Bobina -->
+        <div class="space-y-4">
+          <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Información de la Bobina</h3>
+          <div class="space-y-2">
+            <div class="flex justify-between">
+              <span class="font-medium text-gray-700">Registro:</span>
+              <span class="text-gray-900">#{{ selectedDespacho.id_registro }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-medium text-gray-700">Bobina:</span>
+              <span class="text-gray-900">{{ selectedDespacho.bobina_desc }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-medium text-gray-700">Pedido Compra:</span>
+              <span class="text-gray-900">{{ selectedDespacho.pedido_compra }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-medium text-gray-700">Colada:</span>
+              <span class="text-gray-900">{{ selectedDespacho.colada }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-medium text-gray-700">Peso:</span>
+              <span class="text-gray-900 font-semibold">{{ selectedDespacho.peso }} kg</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-medium text-gray-700">Proveedor:</span>
+              <span class="text-gray-900">{{ selectedDespacho.proveedor_nombre }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Observaciones -->
+      <div class="mt-6 space-y-2">
+        <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Observaciones</h3>
+        <p class="text-gray-700 bg-gray-50 rounded-lg p-4">{{ selectedDespacho.ped_observaciones || 'Sin observaciones' }}</p>
+      </div>
+
+      <!-- Fechas -->
+      <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <span class="font-medium text-gray-700">Fecha Pedido:</span>
+          <p class="text-gray-900">{{ formatearFecha(selectedDespacho.fecha_pedido) }}</p>
+        </div>
+        <div *ngIf="selectedDespacho.fecha_despacho">
+          <span class="font-medium text-gray-700">Fecha Despacho:</span>
+          <p class="text-gray-900">{{ formatearFecha(selectedDespacho.fecha_despacho) }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="border-t border-gray-200 p-4 flex justify-end space-x-3">
+      <button
+        (click)="exportarPDF(selectedDespacho)"
+        class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium flex items-center gap-2"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        Exportar PDF
+      </button>
+      <button
+        (click)="cerrarModal()"
+        class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"
+      >
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>

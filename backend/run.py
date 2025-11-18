@@ -9,14 +9,227 @@ from datetime import datetime
 load_dotenv()
 
 app = Flask(__name__)
-
+CORS(app, origins=["http://localhost:4200"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 # Configuración
 CORS(app, origins=['http://localhost:4200'])
 app.config['SQLALCHEMY_DATABASE_URI'] = f"mssql+pyodbc://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_SERVER')}/{os.getenv('DB_DATABASE')}?driver={os.getenv('DB_DRIVER')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:4200')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
+@app.route('/api/registros/<int:id_registro>', methods=['PUT', 'OPTIONS'])
+def actualizar_registro(id_registro):
+    if request.method == 'OPTIONS':
+        return jsonify({'success': True}), 200
+        
+    try:
+        data = request.get_json()
+        print(f'Actualizando registro {id_registro}:', data)
 
+        # Construir query dinámicamente basado en los campos proporcionados
+        update_fields = []
+        params = {'id_registro': id_registro}
+
+        campos_permitidos = [
+            'pedido_compra', 'colada', 'peso', 'cantidad', 'lote', 
+            'fecha_inventario', 'observaciones', 'ton_pedido_compra', 
+            'fecha_ingreso_planta', 'bobina_id_bobi', 'proveedor_id_prov', 
+            'barco_id_barco', 'ubicacion_id_ubi', 'estado_id_estado', 
+            'molino_id_molino', 'n_bobi_proveedor', 'bobi_correlativo', 
+            'cod_bobin2'
+        ]
+
+        for campo in campos_permitidos:
+            if campo in data and data[campo] is not None:
+                update_fields.append(f"{campo.upper()} = :{campo}")
+                params[campo] = data[campo]
+
+        if not update_fields:
+            return jsonify({
+                'success': False,
+                'error': 'No se proporcionaron campos para actualizar'
+            }), 400
+
+        query = f"UPDATE REGISTROS SET {', '.join(update_fields)} WHERE ID_REGISTRO = :id_registro"
+
+        print('Query de actualización:', query)
+        print('Parámetros:', params)
+
+        result = db.session.execute(text(query), params)
+        db.session.commit()
+
+        if result.rowcount > 0:
+            return jsonify({
+                'success': True,
+                'message': f'Registro {id_registro} actualizado exitosamente'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Registro no encontrado'
+            }), 404
+
+    except Exception as e:
+        db.session.rollback()
+        print('Error al actualizar registro:', str(e))
+        return jsonify({
+            'success': False,
+            'error': f'Error al actualizar registro: {str(e)}'
+        }), 500
+# Endpoints para Gestión de Tablas Maestras
+@app.route('/api/gestion/<tabla>', methods=['GET'])
+def get_tabla_gestion(tabla):
+    try:
+        # Validar tabla permitida
+        tablas_permitidas = ['UBICACION', 'BARCO', 'MOLINO', 'PROVEEDOR', 'ESTADO', 'PROCEDENCIA']
+        if tabla not in tablas_permitidas:
+            return jsonify({
+                'success': False,
+                'error': f'Tabla {tabla} no permitida'
+            }), 400
+
+        # Consulta dinámica según la tabla
+        if tabla == 'UBICACION':
+            query = "SELECT ID_UBI, DESC_UBI FROM UBICACION ORDER BY ID_UBI"
+        elif tabla == 'BARCO':
+            query = "SELECT ID_BARCO, NOMBRE_BARCO FROM BARCO ORDER BY ID_BARCO"
+        elif tabla == 'MOLINO':
+            query = "SELECT ID_MOLINO, NOMBRE_MOLINO, PROCEDENCIA_ID_PROCED FROM MOLINO ORDER BY ID_MOLINO"
+        elif tabla == 'PROVEEDOR':
+            query = "SELECT ID_PROV, NOMBRE_PROV FROM PROVEEDOR ORDER BY ID_PROV"
+        elif tabla == 'ESTADO':
+            query = "SELECT ID_ESTADO, DESC_ESTADO FROM ESTADO ORDER BY ID_ESTADO"
+        elif tabla == 'PROCEDENCIA':
+            query = "SELECT ID_PROCED, DESC_PROCED FROM PROCEDENCIA ORDER BY ID_PROCED"
+
+        result = db.session.execute(text(query))
+        datos = []
+        
+        for row in result:
+            dato = {}
+            for idx, column in enumerate(result.keys()):
+                value = row[idx]
+                if hasattr(value, 'isoformat'):
+                    dato[column.lower()] = value.isoformat()
+                else:
+                    dato[column.lower()] = value
+            datos.append(dato)
+
+        return jsonify({
+            'success': True,
+            'data': datos
+        })
+
+    except Exception as e:
+        print(f'Error obteniendo datos de {tabla}:', str(e))
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/gestion/<tabla>', methods=['POST'])
+def agregar_registro_gestion(tabla):
+    try:
+        data = request.get_json()
+        print(f'Agregando registro a {tabla}:', data)
+
+        tablas_permitidas = ['UBICACION', 'BARCO', 'MOLINO', 'PROVEEDOR', 'ESTADO', 'PROCEDENCIA']
+        if tabla not in tablas_permitidas:
+            return jsonify({
+                'success': False,
+                'error': f'Tabla {tabla} no permitida'
+            }), 400
+
+        # Construir query de inserción dinámica
+        if tabla == 'UBICACION':
+            query = "INSERT INTO UBICACION (DESC_UBI) VALUES (:desc_ubi)"
+            params = {'desc_ubi': data['desc_ubi']}
+        elif tabla == 'BARCO':
+            query = "INSERT INTO BARCO (NOMBRE_BARCO) VALUES (:nombre_barco)"
+            params = {'nombre_barco': data['nombre_barco']}
+        elif tabla == 'MOLINO':
+            query = "INSERT INTO MOLINO (NOMBRE_MOLINO, PROCEDENCIA_ID_PROCED) VALUES (:nombre_molino, :procedencia_id_proced)"
+            params = {
+                'nombre_molino': data['nombre_molino'],
+                'procedencia_id_proced': data['procedencia_id_proced']
+            }
+        elif tabla == 'PROVEEDOR':
+            query = "INSERT INTO PROVEEDOR (NOMBRE_PROV) VALUES (:nombre_prov)"
+            params = {'nombre_prov': data['nombre_prov']}
+        elif tabla == 'ESTADO':
+            query = "INSERT INTO ESTADO (DESC_ESTADO) VALUES (:desc_estado)"
+            params = {'desc_estado': data['desc_estado']}
+        elif tabla == 'PROCEDENCIA':
+            query = "INSERT INTO PROCEDENCIA (DESC_PROCED) VALUES (:desc_proced)"
+            params = {'desc_proced': data['desc_proced']}
+
+        result = db.session.execute(text(query), params)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'Registro agregado exitosamente a {tabla}'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f'Error agregando registro a {tabla}:', str(e))
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/gestion/<tabla>/<int:id>', methods=['DELETE'])
+def eliminar_registro_gestion(tabla, id):
+    try:
+        tablas_permitidas = ['UBICACION', 'BARCO', 'MOLINO', 'PROVEEDOR', 'ESTADO', 'PROCEDENCIA']
+        if tabla not in tablas_permitidas:
+            return jsonify({
+                'success': False,
+                'error': f'Tabla {tabla} no permitida'
+            }), 400
+
+        # Construir query de eliminación dinámica
+        if tabla == 'UBICACION':
+            query = "DELETE FROM UBICACION WHERE ID_UBI = :id"
+        elif tabla == 'BARCO':
+            query = "DELETE FROM BARCO WHERE ID_BARCO = :id"
+        elif tabla == 'MOLINO':
+            query = "DELETE FROM MOLINO WHERE ID_MOLINO = :id"
+        elif tabla == 'PROVEEDOR':
+            query = "DELETE FROM PROVEEDOR WHERE ID_PROV = :id"
+        elif tabla == 'ESTADO':
+            query = "DELETE FROM ESTADO WHERE ID_ESTADO = :id"
+        elif tabla == 'PROCEDENCIA':
+            query = "DELETE FROM PROCEDENCIA WHERE ID_PROCED = :id"
+
+        result = db.session.execute(text(query), {'id': id})
+        db.session.commit()
+
+        if result.rowcount > 0:
+            return jsonify({
+                'success': True,
+                'message': f'Registro eliminado exitosamente de {tabla}'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Registro no encontrado'
+            }), 404
+
+    except Exception as e:
+        db.session.rollback()
+        print(f'Error eliminando registro de {tabla}:', str(e))
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 @app.route('/')
 def hello():
     return jsonify({
@@ -47,36 +260,37 @@ def get_registros():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
         search = request.args.get('search', '')
+        estado = request.args.get('estado', '')  # Nuevo filtro por estado
 
         # Consulta base con JOINs para obtener información relacionada
         query = """
-        SELECT 
-        r.ID_REGISTRO,
-        r.FECHA_LLEGADA,
-        r.PEDIDO_COMPRA,
-        r.COLADA,
-        r.PESO,
-        r.CANTIDAD,
-        r.LOTE,
-        r.FECHA_INVENTARIO,
-        r.OBSERVACIONES,
-        r.TON_PEDIDO_COMPRA,
-        r.FECHA_INGRESO_PLANTA,
-        r.BOBINA_ID_BOBI,
-        b.DESC_BOBI as BOBINA_DESC,
-        r.PROVEEDOR_ID_PROV,
-        p.NOMBRE_PROV as PROVEEDOR_NOMBRE,
-        r.BARCO_ID_BARCO,
-        bc.NOMBRE_BARCO as BARCO_NOMBRE,
-        r.UBICACION_ID_UBI,
-        u.DESC_UBI as UBICACION_DESC,
-        r.ESTADO_ID_ESTADO,
-        e.DESC_ESTADO as ESTADO_DESC,
-        r.MOLINO_ID_MOLINO,
-        m.NOMBRE_MOLINO as MOLINO_NOMBRE,
-        r.N_BOBI_PROVEEDOR,
-        r.BOBI_CORRELATIVO,
-        r.COD_BOBIN2  -- ✅ AGREGAR ESTE CAMPO
+        SELECT
+            r.ID_REGISTRO,
+            r.FECHA_LLEGADA,
+            r.PEDIDO_COMPRA,
+            r.COLADA,
+            r.PESO,
+            r.CANTIDAD,
+            r.LOTE,
+            r.FECHA_INVENTARIO,
+            r.OBSERVACIONES,
+            r.TON_PEDIDO_COMPRA,
+            r.FECHA_INGRESO_PLANTA,
+            r.BOBINA_ID_BOBI,
+            b.DESC_BOBI as BOBINA_DESC,
+            r.PROVEEDOR_ID_PROV,
+            p.NOMBRE_PROV as PROVEEDOR_NOMBRE,
+            r.BARCO_ID_BARCO,
+            bc.NOMBRE_BARCO as BARCO_NOMBRE,
+            r.UBICACION_ID_UBI,
+            u.DESC_UBI as UBICACION_DESC,
+            r.ESTADO_ID_ESTADO,
+            e.DESC_ESTADO as ESTADO_DESC,
+            r.MOLINO_ID_MOLINO,
+            m.NOMBRE_MOLINO as MOLINO_NOMBRE,
+            r.N_BOBI_PROVEEDOR,
+            r.BOBI_CORRELATIVO,
+            r.COD_BOBIN2
         FROM REGISTROS r
         LEFT JOIN BOBINA b ON r.BOBINA_ID_BOBI = b.ID_BOBI
         LEFT JOIN PROVEEDOR p ON r.PROVEEDOR_ID_PROV = p.ID_PROV
@@ -87,6 +301,12 @@ def get_registros():
         WHERE 1=1
         """
         params = {}
+
+        # Filtrar por estado si se proporciona
+        if estado:
+            query += " AND r.ESTADO_ID_ESTADO = :estado"
+            params['estado'] = estado
+
         if search:
             query += " AND (r.PEDIDO_COMPRA LIKE :search OR r.COLADA LIKE :search OR r.OBSERVACIONES LIKE :search OR p.NOMBRE_PROV LIKE :search OR b.DESC_BOBI LIKE :search OR r.COD_BOBIN2 LIKE :search)"
             params['search'] = f"%{search}%"
@@ -95,12 +315,15 @@ def get_registros():
         count_query = "SELECT COUNT(*) FROM REGISTROS r LEFT JOIN BOBINA b ON r.BOBINA_ID_BOBI = b.ID_BOBI LEFT JOIN PROVEEDOR p ON r.PROVEEDOR_ID_PROV = p.ID_PROV WHERE 1=1"
         if search:
             count_query += " AND (r.PEDIDO_COMPRA LIKE :search OR r.COLADA LIKE :search OR r.OBSERVACIONES LIKE :search OR p.NOMBRE_PROV LIKE :search OR b.DESC_BOBI LIKE :search OR r.COD_BOBIN2 LIKE :search)"
-            
-        total = db.session.execute(text(count_query), params).scalar()
-        total_pages = (total + per_page - 1) // per_page
+        if estado:
+            count_query += " AND r.ESTADO_ID_ESTADO = :estado"
 
-        # Consulta con paginación
-        query += " ORDER BY r.FECHA_INGRESO_PLANTA ASC OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY"  # ✅ Orden ascendente
+        total = db.session.execute(text(count_query), params).scalar()
+
+        total_pages = (total + per_page - 1) // per_page if total > 0 else 1
+
+        # Consulta con paginacion
+        query += " ORDER BY r.FECHA_INGRESO_PLANTA ASC OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY"
         params['offset'] = (page - 1) * per_page
         params['limit'] = per_page
 
@@ -154,7 +377,336 @@ def get_tablas():
             'success': False,
             'error': str(e)
         }), 500
+# Nuevos endpoints para re
+@app.route('/api/pedidos', methods=['POST'])
+def crear_pedido():
+    try:
+        data = request.get_json()
+        print('Datos recibidos para crear pedido:', data)
 
+        # Validar datos requeridos
+        if not data or 'usuario_solicita_id' not in data or 'registros' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Datos incompletos: se requiere usuario_solicita_id y registros'
+            }), 400
+
+        # 1. Crear cabecera del pedido - CORREGIDO
+        query_cab = """
+        INSERT INTO PEDIDO_CAB (FECHA_PEDIDO, USUARIO_SOLICITA_ID, ESTADO_PEDIDO_ID, OBSERVACIONES)
+        OUTPUT INSERTED.ID_PEDIDO
+        VALUES (SYSDATETIME(), :usuario_id, 2, :observaciones)
+        """
+        params_cab = {
+            'usuario_id': data['usuario_solicita_id'],
+            'observaciones': data.get('observaciones', '')
+        }
+
+        print('Ejecutando query cabecera:', query_cab)
+        print('Con parámetros:', params_cab)
+
+        result = db.session.execute(text(query_cab), params_cab)
+        id_pedido = result.scalar()  # Usar scalar() en lugar de fetchone()
+        print(f'Pedido cabecera creado con ID: {id_pedido}')
+
+        if not id_pedido:
+            raise Exception("No se pudo obtener el ID del pedido creado")
+
+        # 2. Crear detalle del pedido Y ACTUALIZAR ESTADO DE BOBINAS
+        if data['registros']:
+            query_det = """
+            INSERT INTO PEDIDO_DET (ID_PEDIDO, ID_REGISTRO, ESTADO_DESPACHO, PED_OBSERVACIONES)
+            VALUES (:id_pedido, :id_registro, 1, :observaciones)
+            """
+            
+            query_update_estado = """
+            UPDATE REGISTROS 
+            SET ESTADO_ID_ESTADO = 2 -- 2 = 'Despachada'
+            WHERE ID_REGISTRO = :id_registro
+            """
+
+            for id_registro in data['registros']:
+                print(f'Agregando registro {id_registro} al pedido {id_pedido} y marcando como despachada')
+                
+                # Insertar en detalle de pedido
+                db.session.execute(text(query_det), {
+                    'id_pedido': id_pedido,
+                    'id_registro': id_registro,
+                    'observaciones': data.get('observaciones', 'Despachado desde sistema')
+                })
+
+                # Actualizar estado de la bobina a "Despachada"
+                db.session.execute(text(query_update_estado), {
+                    'id_registro': id_registro
+                })
+
+        db.session.commit()
+        print(f'Pedido {id_pedido} creado exitosamente con {len(data["registros"])} registros')
+
+        return jsonify({
+            'success': True,
+            'id_pedido': id_pedido,
+            'message': f'Pedido #{id_pedido} creado exitosamente con {len(data["registros"])} bobinas'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print('Error al crear pedido:', str(e))
+        return jsonify({
+            'success': False,
+            'error': f'Error al crear pedido: {str(e)}'
+        }), 500
+@app.route('/api/opciones-combos')
+def get_opciones_combos():
+    try:
+        # Obtener todas las opciones para los combos
+        bobinas = db.session.execute(text("SELECT ID_BOBI, DESC_BOBI FROM BOBINA")).fetchall()
+        proveedores = db.session.execute(text("SELECT ID_PROV, NOMBRE_PROV FROM PROVEEDOR")).fetchall()
+        barcos = db.session.execute(text("SELECT ID_BARCO, NOMBRE_BARCO FROM BARCO")).fetchall()
+        ubicaciones = db.session.execute(text("SELECT ID_UBI, DESC_UBI FROM UBICACION")).fetchall()
+        estados = db.session.execute(text("SELECT ID_ESTADO, DESC_ESTADO FROM ESTADO")).fetchall()
+        molinos = db.session.execute(text("SELECT ID_MOLINO, NOMBRE_MOLINO FROM MOLINO")).fetchall()
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'bobinas': [{'id': row[0], 'descripcion': row[1]} for row in bobinas],
+                'proveedores': [{'id': row[0], 'nombre': row[1]} for row in proveedores],
+                'barcos': [{'id': row[0], 'nombre': row[1]} for row in barcos],
+                'ubicaciones': [{'id': row[0], 'descripcion': row[1]} for row in ubicaciones],
+                'estados': [{'id': row[0], 'descripcion': row[1]} for row in estados],
+                'molinos': [{'id': row[0], 'nombre': row[1]} for row in molinos]
+            }
+        })
+    except Exception as e:
+        print('Error obteniendo opciones combos:', str(e))
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/registros/actualizar-estado', methods=['PUT'])
+def actualizar_estado_registros():
+    try:
+        data = request.get_json()
+        ids_registros = data.get('ids_registros', [])
+        nuevo_estado_id = data.get('nuevo_estado_id')
+
+        if not ids_registros or nuevo_estado_id is None:
+            return jsonify({
+                'success': False,
+                'error': 'Datos incompletos'
+            }), 400
+
+        # Actualizar estado de los registros
+        query = "UPDATE REGISTROS SET ESTADO_ID_ESTADO = :estado_id WHERE ID_REGISTRO IN :ids_registros"
+        result = db.session.execute(text(query), {
+            'estado_id': nuevo_estado_id,
+            'ids_registros': tuple(ids_registros)
+        })
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'{result.rowcount} registros actualizados exitosamente'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print('Error actualizando estado registros:', str(e))
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+@app.route('/api/despachos/historial')
+def get_historial_despachos():
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        search = request.args.get('search', '')
+
+        # Consulta para obtener todos los despachos (PEDIDO_DET)
+        query = """
+        SELECT
+            pd.ID_PEDIDO_DET,
+            pd.ID_PEDIDO,
+            pd.ID_REGISTRO,
+            pc.FECHA_PEDIDO,
+            u.NOMBRE_USUARIO + ' ' + u.APELLIDO_USUARIO AS SOLICITANTE,
+            ep.DESCRIPCION AS ESTADO_PEDIDO,
+            pd.PED_OBSERVACIONES,
+            pd.ESTADO_DESPACHO,
+            r.PEDIDO_COMPRA,
+            r.COLADA,
+            r.PESO,
+            b.DESC_BOBI AS BOBINA_DESC,
+            p.NOMBRE_PROV AS PROVEEDOR_NOMBRE,
+            CASE WHEN pd.ESTADO_DESPACHO = 1 THEN pc.FECHA_PEDIDO ELSE NULL END AS FECHA_DESPACHO
+        FROM PEDIDO_DET pd
+        JOIN PEDIDO_CAB pc ON pc.ID_PEDIDO = pd.ID_PEDIDO
+        JOIN USUARIOS u ON u.ID_USUARIO = pc.USUARIO_SOLICITA_ID
+        JOIN ESTADO_PEDIDO ep ON ep.ID_ESTADO_PED = pc.ESTADO_PEDIDO_ID
+        JOIN REGISTROS r ON r.ID_REGISTRO = pd.ID_REGISTRO
+        LEFT JOIN BOBINA b ON b.ID_BOBI = r.BOBINA_ID_BOBI
+        LEFT JOIN PROVEEDOR p ON p.ID_PROV = r.PROVEEDOR_ID_PROV
+        WHERE 1=1
+        """
+        
+        params = {}
+
+        if search:
+            query += " AND (r.PEDIDO_COMPRA LIKE :search OR r.COLADA LIKE :search OR b.DESC_BOBI LIKE :search OR p.NOMBRE_PROV LIKE :search)"
+            params['search'] = f"%{search}%"
+
+        # Contar total primero
+        count_query = query.replace(
+            "SELECT pd.ID_PEDIDO_DET, pd.ID_PEDIDO, pd.ID_REGISTRO, pc.FECHA_PEDIDO, u.NOMBRE_USUARIO + ' ' + u.APELLIDO_USUARIO AS SOLICITANTE, ep.DESCRIPCION AS ESTADO_PEDIDO, pd.PED_OBSERVACIONES, pd.ESTADO_DESPACHO, r.PEDIDO_COMPRA, r.COLADA, r.PESO, b.DESC_BOBI AS BOBINA_DESC, p.NOMBRE_PROV AS PROVEEDOR_NOMBRE, CASE WHEN pd.ESTADO_DESPACHO = 1 THEN pc.FECHA_PEDIDO ELSE NULL END AS FECHA_DESPACHO",
+            "SELECT COUNT(*)"
+        )
+        
+        total = db.session.execute(text(count_query), params).scalar()
+        total_pages = (total + per_page - 1) // per_page if total > 0 else 1
+
+        # Consulta principal con paginación
+        query += " ORDER BY pc.FECHA_PEDIDO DESC OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY"
+        params['offset'] = (page - 1) * per_page
+        params['limit'] = per_page
+
+        result = db.session.execute(text(query), params)
+
+        despachos = []
+        for row in result:
+            despacho = {
+                'id_pedido_det': row[0],
+                'id_pedido': row[1],
+                'id_registro': row[2],
+                'fecha_pedido': row[3].isoformat() if hasattr(row[3], 'isoformat') else str(row[3]),
+                'solicitante': row[4],
+                'estado_pedido': row[5],
+                'ped_observaciones': row[6] or '',
+                'estado_despacho': bool(row[7]),
+                'pedido_compra': row[8],
+                'colada': row[9],
+                'peso': float(row[10]) if row[10] else 0,
+                'bobina_desc': row[11] or 'Sin información',
+                'proveedor_nombre': row[12] or 'Sin proveedor',
+                'fecha_despacho': row[13].isoformat() if row[13] and hasattr(row[13], 'isoformat') else (str(row[13]) if row[13] else None)
+            }
+            despachos.append(despacho)
+
+        return jsonify({
+            'success': True,
+            'data': despachos,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': total,
+                'pages': total_pages
+            }
+        })
+
+    except Exception as e:
+        print('Error en historial despachos:', str(e))
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/pedidos/en-curso')
+def get_pedidos_en_curso():
+    try:
+        query = """
+        SELECT
+            pc.ID_PEDIDO,
+            pc.FECHA_PEDIDO,
+            u.NOMBRE_USUARIO + ' ' + u.APELLIDO_USUARIO AS SOLICITANTE,
+            ep.DESCRIPCION AS ESTADO_PEDIDO,
+            pc.OBSERVACIONES,
+            COUNT(pd.ID_PEDIDO_DET) AS CANT_BOBINAS
+        FROM PEDIDO_CAB pc
+        JOIN USUARIOS u ON u.ID_USUARIO = pc.USUARIO_SOLICITA_ID
+        JOIN ESTADO_PEDIDO ep ON ep.ID_ESTADO_PED = pc.ESTADO_PEDIDO_ID
+        LEFT JOIN PEDIDO_DET pd ON pd.ID_PEDIDO = pc.ID_PEDIDO
+        WHERE ep.DESCRIPCION IN ('Borrador', 'Enviado', 'Procesando')
+        GROUP BY 
+            pc.ID_PEDIDO, pc.FECHA_PEDIDO, u.NOMBRE_USUARIO, u.APELLIDO_USUARIO, 
+            ep.DESCRIPCION, pc.OBSERVACIONES
+        ORDER BY pc.FECHA_PEDIDO DESC
+        """
+        
+        result = db.session.execute(text(query))
+        pedidos = []
+        
+        for row in result:
+            pedido = {
+                'id_pedido': row[0],
+                'fecha_pedido': row[1].isoformat() if hasattr(row[1], 'isoformat') else str(row[1]),
+                'solicitante': row[2],
+                'estado_pedido': row[3],
+                'observaciones': row[4],
+                'cant_bobinas': row[5]
+            }
+            pedidos.append(pedido)
+
+        return jsonify({
+            'success': True,
+            'data': pedidos
+        })
+
+    except Exception as e:
+        print('Error en pedidos en curso:', str(e))
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/pedidos/<int:id_pedido>/detalle')
+def get_detalle_pedido(id_pedido):
+    try:
+        query = """
+        SELECT 
+            r.ID_REGISTRO,
+            r.PEDIDO_COMPRA,
+            r.COLADA,
+            r.PESO,
+            r.CANTIDAD,
+            r.LOTE,
+            r.COD_BOBIN2,
+            b.DESC_BOBI,
+            p.NOMBRE_PROV,
+            r.FECHA_INGRESO_PLANTA
+        FROM PEDIDO_DET pd
+        JOIN REGISTROS r ON r.ID_REGISTRO = pd.ID_REGISTRO
+        LEFT JOIN BOBINA b ON b.ID_BOBI = r.BOBINA_ID_BOBI
+        LEFT JOIN PROVEEDOR p ON p.ID_PROV = r.PROVEEDOR_ID_PROV
+        WHERE pd.ID_PEDIDO = :id_pedido
+        ORDER BY r.ID_REGISTRO
+        """
+        
+        result = db.session.execute(text(query), {'id_pedido': id_pedido})
+        
+        detalles = []
+        for row in result:
+            detalle = {}
+            for idx, column in enumerate(result.keys()):
+                value = row[idx]
+                if hasattr(value, 'isoformat'):
+                    detalle[column.lower()] = value.isoformat()
+                else:
+                    detalle[column.lower()] = value
+            detalles.append(detalle)
+        
+        return jsonify({
+            'success': True,
+            'data': detalles
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 # Nuevos endpoints para datos relacionados
 @app.route('/api/proveedores')
 def get_proveedores():
@@ -248,7 +800,202 @@ def get_estadisticas():
             'success': False,
             'error': str(e)
         }), 500
+# Endpoints para usuarios
+@app.route('/api/usuarios')
+def get_usuarios():
+    try:
+        query = """
+        SELECT 
+            ID_USUARIO,
+            NOMBRE_USUARIO,
+            APELLIDO_USUARIO,
+            CORREO_USUARIO,
+            AZURE_OBJECT_ID,
+            ROL_USUARIO,
+            ESTADO,
+            FECHA_ULTIMO_ACCESO,
+            FECHA_CREACION
+        FROM USUARIOS
+        WHERE ESTADO = 'Activo'
+        ORDER BY NOMBRE_USUARIO, APELLIDO_USUARIO
+        """
+        result = db.session.execute(text(query))
+        
+        usuarios = []
+        for row in result:
+            usuario = {}
+            for idx, column in enumerate(result.keys()):
+                value = row[idx]
+                if hasattr(value, 'isoformat'):
+                    usuario[column.lower()] = value.isoformat()
+                else:
+                    usuario[column.lower()] = value
+            usuarios.append(usuario)
+        
+        return jsonify({
+            'success': True,
+            'data': usuarios
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
+@app.route('/api/usuarios/<int:id_usuario>')
+def get_usuario(id_usuario):
+    try:
+        query = """
+        SELECT 
+            ID_USUARIO,
+            NOMBRE_USUARIO,
+            APELLIDO_USUARIO,
+            CORREO_USUARIO,
+            AZURE_OBJECT_ID,
+            ROL_USUARIO,
+            ESTADO,
+            FECHA_ULTIMO_ACCESO,
+            FECHA_CREACION
+        FROM USUARIOS
+        WHERE ID_USUARIO = :id_usuario
+        """
+        result = db.session.execute(text(query), {'id_usuario': id_usuario})
+        row = result.fetchone()
+        
+        if not row:
+            return jsonify({
+                'success': False,
+                'error': 'Usuario no encontrado'
+            }), 404
+        
+        usuario = {}
+        for idx, column in enumerate(result.keys()):
+            value = row[idx]
+            if hasattr(value, 'isoformat'):
+                usuario[column.lower()] = value.isoformat()
+            else:
+                usuario[column.lower()] = value
+        
+        return jsonify({
+            'success': True,
+            'data': usuario
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/usuarios/azure/<azure_object_id>')
+def get_usuario_azure(azure_object_id):
+    try:
+        query = """
+        SELECT 
+            ID_USUARIO,
+            NOMBRE_USUARIO,
+            APELLIDO_USUARIO,
+            CORREO_USUARIO,
+            AZURE_OBJECT_ID,
+            ROL_USUARIO,
+            ESTADO,
+            FECHA_ULTIMO_ACCESO,
+            FECHA_CREACION
+        FROM USUARIOS
+        WHERE AZURE_OBJECT_ID = :azure_object_id
+        """
+        result = db.session.execute(text(query), {'azure_object_id': azure_object_id})
+        row = result.fetchone()
+        
+        if not row:
+            return jsonify({
+                'success': False,
+                'error': 'Usuario no encontrado'
+            }), 404
+        
+        usuario = {}
+        for idx, column in enumerate(result.keys()):
+            value = row[idx]
+            if hasattr(value, 'isoformat'):
+                usuario[column.lower()] = value.isoformat()
+            else:
+                usuario[column.lower()] = value
+        
+        return jsonify({
+            'success': True,
+            'data': usuario
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/usuarios/sincronizar', methods=['POST'])
+def sincronizar_usuario():
+    try:
+        data = request.get_json()
+        
+        # Verificar si el usuario ya existe
+        query_check = """
+        SELECT ID_USUARIO FROM USUARIOS 
+        WHERE AZURE_OBJECT_ID = :azure_object_id
+        """
+        result = db.session.execute(text(query_check), {
+            'azure_object_id': data['azure_object_id']
+        })
+        existing_user = result.fetchone()
+        
+        if existing_user:
+            # Actualizar último acceso
+            query_update = """
+            UPDATE USUARIOS 
+            SET FECHA_ULTIMO_ACCESO = SYSDATETIME()
+            WHERE ID_USUARIO = :id_usuario
+            """
+            db.session.execute(text(query_update), {
+                'id_usuario': existing_user[0]
+            })
+            user_id = existing_user[0]
+        else:
+            # Crear nuevo usuario
+            query_insert = """
+            INSERT INTO USUARIOS (
+                NOMBRE_USUARIO, 
+                APELLIDO_USUARIO, 
+                CORREO_USUARIO, 
+                AZURE_OBJECT_ID,
+                ROL_USUARIO
+            ) VALUES (
+                :nombre, :apellido, :correo, :azure_object_id, :rol
+            )
+            SELECT SCOPE_IDENTITY() as id_usuario
+            """
+            result = db.session.execute(text(query_insert), {
+                'nombre': data.get('nombre', ''),
+                'apellido': data.get('apellido', ''),
+                'correo': data.get('correo', ''),
+                'azure_object_id': data['azure_object_id'],
+                'rol': data.get('rol', 'Consulta')
+            })
+            user_id = result.fetchone()[0]
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'id_usuario': user_id,
+            'message': 'Usuario sincronizado exitosamente'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 if __name__ == '__main__':
     print("🚀 Servidor BOBIS API iniciando...")
     print(f"📊 Base de datos: {os.getenv('DB_DATABASE')}")
