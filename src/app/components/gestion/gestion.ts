@@ -1,21 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-interface Tabla {
-  nombre: string;
-  nombreDisplay: string;
-  campos: Campo[];
-  datos: any[];
-}
-
-interface Campo {
-  nombre: string;
-  tipo: string;
-  requerido: boolean;
-  display: string;
-  opciones?: any[];
-}
+import { GestionService, TablaGestion, GestionResponse } from '../../services/gestion.service';
 
 @Component({
   selector: 'app-gestion',
@@ -25,81 +11,50 @@ interface Campo {
   styleUrl: './gestion.scss'
 })
 export class Gestion implements OnInit {
-  tablas: Tabla[] = [
-    {
-      nombre: 'UBICACION',
-      nombreDisplay: 'Ubicaciones',
-      campos: [
-        { nombre: 'DESC_UBI', tipo: 'text', requerido: true, display: 'Descripción' }
-      ],
-      datos: []
-    },
-    {
-      nombre: 'BARCO',
-      nombreDisplay: 'Barcos',
-      campos: [
-        { nombre: 'NOMBRE_BARCO', tipo: 'text', requerido: true, display: 'Nombre' }
-      ],
-      datos: []
-    },
-    {
-      nombre: 'MOLINO',
-      nombreDisplay: 'Molinos',
-      campos: [
-        { nombre: 'NOMBRE_MOLINO', tipo: 'text', requerido: true, display: 'Nombre' },
-        { 
-          nombre: 'PROCEDENCIA_ID_PROCED', 
-          tipo: 'select', 
-          requerido: true, 
-          display: 'Procedencia',
-          opciones: [
-            { ID_PROCED: 1, DESC_PROCED: 'Nacional' },
-            { ID_PROCED: 2, DESC_PROCED: 'Importado' }
-          ]
-        }
-      ],
-      datos: []
-    },
-    {
-      nombre: 'PROVEEDOR',
-      nombreDisplay: 'Proveedores',
-      campos: [
-        { nombre: 'NOMBRE_PROV', tipo: 'text', requerido: true, display: 'Nombre' }
-      ],
-      datos: []
-    },
-    {
-      nombre: 'ESTADO',
-      nombreDisplay: 'Estados',
-      campos: [
-        { nombre: 'DESC_ESTADO', tipo: 'text', requerido: true, display: 'Descripción' }
-      ],
-      datos: []
-    },
-    {
-      nombre: 'PROCEDENCIA',
-      nombreDisplay: 'Procedencias',
-      campos: [
-        { nombre: 'DESC_PROCED', tipo: 'text', requerido: true, display: 'Descripción' }
-      ],
-      datos: []
-    }
-  ];
-
-  tablaActiva: Tabla | null = null;
+  tablas: TablaGestion[] = [];
+  tablaActiva: TablaGestion | null = null;
   datosTabla: any[] = [];
   nuevoRegistro: any = {};
   isLoading = false;
   errorMessage = '';
   successMessage = '';
+  procedencias: any[] = [];
+
+  constructor(private gestionService: GestionService) {}
 
   ngOnInit() {
+    this.tablas = this.gestionService.tablas;
     if (this.tablas.length > 0) {
       this.cambiarTabla(this.tablas[0]);
     }
+    this.cargarProcedencias();
   }
 
-  cambiarTabla(tabla: Tabla) {
+  cargarProcedencias() {
+    this.gestionService.getOpcionesProcedencias().subscribe({
+      next: (response: GestionResponse) => {
+        if (response.success) {
+          this.procedencias = response.data;
+          console.log('Procedencias cargadas:', this.procedencias);
+          // Actualizar las opciones del campo PROCEDENCIA_ID_PROCED en MOLINO
+          const tablaMolino = this.tablas.find(t => t.nombre === 'MOLINO');
+          if (tablaMolino) {
+            const campoProcedencia = tablaMolino.campos.find(c => c.nombre === 'PROCEDENCIA_ID_PROCED');
+            if (campoProcedencia) {
+              campoProcedencia.opciones = this.procedencias;
+            }
+          }
+        } else {
+          console.error('Error cargando procedencias:', response.error);
+        }
+      },
+      error: (error) => {
+        console.error('Error cargando procedencias:', error);
+      }
+    });
+  }
+
+  cambiarTabla(tabla: TablaGestion) {
     this.tablaActiva = tabla;
     this.nuevoRegistro = {};
     this.errorMessage = '';
@@ -111,51 +66,25 @@ export class Gestion implements OnInit {
     if (!this.tablaActiva) return;
 
     this.isLoading = true;
-    // Simular carga de datos reales
-    setTimeout(() => {
-      switch(this.tablaActiva?.nombre) {
-        case 'UBICACION':
-          this.datosTabla = [
-            { ID_UBI: 1, DESC_UBI: 'Patio - Nave 1' },
-            { ID_UBI: 2, DESC_UBI: 'Nave 2' },
-            { ID_UBI: 3, DESC_UBI: 'Producción' },
-            { ID_UBI: 4, DESC_UBI: 'Despacho' }
-          ];
-          break;
-        case 'BARCO':
-          this.datosTabla = [
-            { ID_BARCO: 1, NOMBRE_BARCO: 'Pacífico I' },
-            { ID_BARCO: 2, NOMBRE_BARCO: 'Atlántico II' }
-          ];
-          break;
-        case 'MOLINO':
-          this.datosTabla = [
-            { ID_MOLINO: 1, NOMBRE_MOLINO: 'Molino Chimbote', PROCEDENCIA_ID_PROCED: 1 },
-            { ID_MOLINO: 2, NOMBRE_MOLINO: 'Molino Brasil', PROCEDENCIA_ID_PROCED: 2 }
-          ];
-          break;
-        case 'PROVEEDOR':
-          this.datosTabla = [
-            { ID_PROV: 1, NOMBRE_PROV: 'Aceros del Norte' },
-            { ID_PROV: 2, NOMBRE_PROV: 'SiderPerú' }
-          ];
-          break;
-        case 'ESTADO':
-          this.datosTabla = [
-            { ID_ESTADO: 1, DESC_ESTADO: 'En planta' },
-            { ID_ESTADO: 2, DESC_ESTADO: 'Disponible' },
-            { ID_ESTADO: 3, DESC_ESTADO: 'Despachada' }
-          ];
-          break;
-        case 'PROCEDENCIA':
-          this.datosTabla = [
-            { ID_PROCED: 1, DESC_PROCED: 'Nacional' },
-            { ID_PROCED: 2, DESC_PROCED: 'Importado' }
-          ];
-          break;
+    this.errorMessage = '';
+    
+    this.gestionService.getDataTabla(this.tablaActiva.nombre).subscribe({
+      next: (response: GestionResponse) => {
+        if (response.success) {
+          this.datosTabla = response.data;
+          console.log(`Datos de ${this.tablaActiva?.nombreDisplay} cargados:`, this.datosTabla);
+        } else {
+          this.errorMessage = response.error || 'Error al cargar los datos';
+          console.error('Error en respuesta:', response);
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error cargando datos:', error);
+        this.errorMessage = `Error de conexión: ${error.message}`;
+        this.isLoading = false;
       }
-      this.isLoading = false;
-    }, 500);
+    });
   }
 
   agregarRegistro() {
@@ -168,22 +97,25 @@ export class Gestion implements OnInit {
     this.errorMessage = '';
     this.successMessage = '';
 
-    // Simular inserción
-    setTimeout(() => {
-      const nuevoId = this.datosTabla.length > 0 
-        ? Math.max(...this.datosTabla.map(d => d[this.getIdField()])) + 1 
-        : 1;
-      
-      const nuevoRegistro = {
-        [this.getIdField()]: nuevoId,
-        ...this.nuevoRegistro
-      };
+    console.log('Enviando datos:', this.nuevoRegistro);
 
-      this.datosTabla.push(nuevoRegistro);
-      this.nuevoRegistro = {};
-      this.isLoading = false;
-      this.successMessage = 'Registro agregado exitosamente.';
-    }, 500);
+    this.gestionService.agregarRegistro(this.tablaActiva.nombre, this.nuevoRegistro).subscribe({
+      next: (response: GestionResponse) => {
+        if (response.success) {
+          this.successMessage = response.message || 'Registro agregado exitosamente.';
+          this.nuevoRegistro = {};
+          this.cargarDataTabla(); // Recargar datos
+        } else {
+          this.errorMessage = response.error || 'Error al agregar el registro';
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error agregando registro:', error);
+        this.errorMessage = `Error: ${error.message}`;
+        this.isLoading = false;
+      }
+    });
   }
 
   validarRegistro(): boolean {
@@ -197,7 +129,8 @@ export class Gestion implements OnInit {
   eliminarRegistro(registro: any) {
     if (!this.tablaActiva) return;
 
-    const id = registro[this.getIdField()];
+    const idField = this.getIdField();
+    const id = registro[idField];
 
     if (id === undefined || id === null) {
       this.errorMessage = 'No se pudo obtener el ID del registro';
@@ -209,39 +142,74 @@ export class Gestion implements OnInit {
       this.errorMessage = '';
       this.successMessage = '';
 
-      // Simular eliminación
-      setTimeout(() => {
-        this.datosTabla = this.datosTabla.filter(
-          d => d[this.getIdField()] !== id
-        );
-        this.isLoading = false;
-        this.successMessage = 'Registro eliminado exitosamente.';
-      }, 500);
+      this.gestionService.eliminarRegistro(this.tablaActiva.nombre, id).subscribe({
+        next: (response: GestionResponse) => {
+          if (response.success) {
+            this.successMessage = response.message || 'Registro eliminado exitosamente.';
+            this.cargarDataTabla(); // Recargar datos
+          } else {
+            this.errorMessage = response.error || 'Error al eliminar el registro';
+          }
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error eliminando registro:', error);
+          this.errorMessage = error.message || 'Error de conexión al eliminar';
+          this.isLoading = false;
+        }
+      });
     }
   }
 
   // Métodos auxiliares para IDs
   getNombreId(): string {
-    if (!this.tablaActiva) return 'ID';
-    const tablaBase = this.tablaActiva.nombre.split('_')[0];
-    return `ID_${tablaBase}`;
-  }
+  if (!this.tablaActiva) return 'ID';
+  const tablaBase = this.tablaActiva.nombre.split('_')[0];
+  return 'ID_' + tablaBase;
+}
 
-  getIdField(): string {
-    if (!this.tablaActiva) return 'id';
-    const tablaBase = this.tablaActiva.nombre.split('_')[0];
-    return `ID_${tablaBase}`;
+getIdField(): string {
+  if (!this.tablaActiva) return 'id';
+  
+  // CORREGIDO: Usar los nombres reales de campos ID según cada tabla
+  switch(this.tablaActiva.nombre) {
+    case 'UBICACION':
+      return 'ID_UBI';
+    case 'BARCO':
+      return 'ID_BARCO';
+    case 'MOLINO':
+      return 'ID_MOLINO';
+    case 'PROVEEDOR':
+      return 'ID_PROV';
+    case 'ESTADO':
+      return 'ID_ESTADO';
+    case 'PROCEDENCIA':
+      return 'ID_PROCED';
+    default:
+      const tablaBase = this.tablaActiva.nombre.split('_')[0];
+      return 'ID_' + tablaBase;
   }
+}
 
-  getIdValor(registro: any): any {
-    const idField = this.getIdField();
-    return registro[idField];
-  }
+getIdValor(registro: any): any {
+  const idField = this.getIdField();
+  const value = registro[idField];
+  console.log(`Buscando campo ${idField} en registro:`, registro, 'Valor:', value);
+  return value !== undefined && value !== null ? value : 'N/A';
+}
 
   // Helper para obtener descripción de opciones en combos
-  getDescripcionOpcion(campo: Campo, valor: any): string {
+  getDescripcionOpcion(campo: any, valor: any): string {
     if (!campo.opciones) return valor;
-    const opcion = campo.opciones.find(o => o.ID_PROCED == valor);
+    const opcion = campo.opciones.find((o: any) => o.ID_PROCED == valor);
     return opcion ? opcion.DESC_PROCED : valor;
   }
+
+  // Método para verificar si se puede eliminar un registro
+  puedeEliminar(registro: any): boolean {
+  const idField = this.getIdField();
+  const id = registro[idField];
+  console.log(`Verificando eliminación - Campo: ${idField}, ID:`, id);
+  return id !== undefined && id !== null && id !== 'N/A';
+}
 }

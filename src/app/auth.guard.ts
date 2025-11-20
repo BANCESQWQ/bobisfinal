@@ -1,18 +1,25 @@
-import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+// src/app/guards/auth.guard.ts
+import { Injectable } from '@angular/core';
+import { CanActivate, Router } from '@angular/router';
 import { MsalService } from '@azure/msal-angular';
 
-export const authGuard: CanActivateFn = (route, state) => {
-  const msalService = inject(MsalService);
-  const router = inject(Router);
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthGuard implements CanActivate {
+  constructor(
+    private authService: MsalService,
+    private router: Router
+  ) {}
 
-  const accounts = msalService.instance.getAllAccounts();
-  
-  if (accounts.length > 0) {
-    return true;
-  } else {
-    // Redirigir al login
-    router.navigate(['/login']);
+  canActivate(): boolean {
+    const accounts = this.authService.instance.getAllAccounts();
+    
+    if (accounts.length > 0) {
+      return true;
+    }
+
+    this.router.navigate(['/login']);
     return false;
   }
-};
+}

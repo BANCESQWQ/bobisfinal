@@ -1,113 +1,261 @@
-<div class="p-6 space-y-6">
-  <!-- Header del Dashboard -->
-  <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-lg p-8 text-white">
-    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-      <div>
-        <h1 class="text-3xl font-bold mb-2">Dashboard BOBIS</h1>
-        <p class="text-blue-100 opacity-90">Sistema de Gestión de Bobinas - bd_bobonas</p>
-        <p class="text-blue-100 opacity-70 text-sm mt-1">
-          Bienvenido de nuevo
-        </p>
-      </div>
-      
-      <div class="flex items-center gap-4">
-        <!-- Fecha actual -->
-        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-4 py-2">
-          <span class="text-sm">{{ currentDate }}</span>
+<div class="p-6 space-y-6 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+  <!-- Header Mejorado -->
+  <div class="dashboard-header rounded-2xl shadow-2xl p-6 text-white relative overflow-hidden">
+    <div class="absolute inset-0 bg-black opacity-10"></div>
+    <div class="particles">
+      <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
+      <div class="particle" style="left: 30%; animation-delay: 1s;"></div>
+      <div class="particle" style="left: 50%; animation-delay: 2s;"></div>
+      <div class="particle" style="left: 70%; animation-delay: 3s;"></div>
+      <div class="particle" style="left: 90%; animation-delay: 4s;"></div>
+    </div>
+    <div class="relative z-10">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-bold mb-2 flex items-center gap-3">
+            <span class="bg-white text-purple-600 p-2 rounded-lg"></span>
+            Dashboards
+          </h1>
+          <p class="text-purple-100 opacity-90 text-lg">
+            Análisis en tiempo real con Machine Learning 
+            <span [class]="getColorTendencia()" class="ml-2 px-3 py-1 rounded-full text-sm font-semibold">
+              {{ getIconoTendencia() }} Tendencia {{ getTendenciaActual() }}
+            </span>
+          </p>
+        </div>
+        <div class="bg-white bg-opacity-20 rounded-lg px-4 py-2 backdrop-blur-sm">
+          <div class="text-sm">Actualizado: {{ today | date:'dd/MM/yyyy HH:mm' }}</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Loading -->
+  <!-- Loading Animado -->
   <div *ngIf="isLoading" class="flex justify-center items-center py-12">
-    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    <div class="text-center">
+      <div class="loading-spinner mx-auto mb-4"></div>
+      <p class="text-gray-600 text-lg">Cargando análisis predictivo...</p>
+      <p class="text-gray-500 text-sm">Ejecutando modelos de Machine Learning</p>
+    </div>
   </div>
 
-  <!-- Grid de estadísticas -->
-  <div *ngIf="!isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-    <!-- Tarjeta Total Registros -->
-    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-gray-600 text-sm font-medium">Total Registros</p>
-          <p class="text-3xl font-bold text-gray-800 mt-2">{{ totalRegistros | number }}</p>
-          <p class="text-green-600 text-sm mt-1 flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+  <!-- Error -->
+  <div *ngIf="errorMessage && !isLoading" class="bg-red-50 border border-red-200 rounded-xl p-4">
+    <div class="flex items-center">
+      <div class="flex-shrink-0">
+        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+        </svg>
+      </div>
+      <div class="ml-3">
+        <h3 class="text-sm font-medium text-red-800">Error</h3>
+        <p class="text-sm text-red-700 mt-1">{{ errorMessage }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenido Principal -->
+  <div *ngIf="datos && !isLoading" class="space-y-6">
+    
+    <!-- Estadísticas Rápidas Animadas -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Total Bobinas -->
+      <div class="stat-card rounded-2xl p-6 glow-effect">
+        <div class="flex items-center">
+          <div class="stat-icon blue mr-4">
+            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
             </svg>
-            Base de datos activa
-          </p>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-600">Total Bobinas</p>
+            <p class="text-3xl font-bold text-gray-900">{{ stats.totalBobinas | number }}</p>
+          </div>
         </div>
-        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-          </svg>
+        <div class="progress-bar mt-4">
+          <div class="progress-fill blue" [style.width.%]="(stats.totalBobinas / (stats.totalBobinas + 100)) * 100"></div>
+        </div>
+      </div>
+
+      <!-- Disponibles -->
+      <div class="stat-card rounded-2xl p-6 glow-effect">
+        <div class="flex items-center">
+          <div class="stat-icon green mr-4">
+            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-600">Disponibles</p>
+            <p class="text-3xl font-bold text-gray-900">{{ stats.bobinasDisponibles | number }}</p>
+          </div>
+        </div>
+        <div class="progress-bar mt-4">
+          <div class="progress-fill green" [style.width.%]="(stats.bobinasDisponibles / stats.totalBobinas) * 100"></div>
+        </div>
+      </div>
+
+      <!-- Bobina Más Popular -->
+      <div class="stat-card rounded-2xl p-6 glow-effect">
+        <div class="flex items-center">
+          <div class="stat-icon orange mr-4">
+            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-600">Bobina Más Popular</p>
+            <p class="text-lg font-bold text-gray-900 truncate" [title]="getBobinaMasPopular()?.bobina || ''">
+              {{ getBobinaMasPopular()?.bobina || 'N/A' }}
+            </p>
+            <p class="text-sm text-gray-500">
+              {{ getBobinaMasPopular()?.total_pedidos || 0 }} pedidos
+            </p>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Tarjeta Peso Total -->
-    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-gray-600 text-sm font-medium">Peso Total</p>
-          <p class="text-3xl font-bold text-gray-800 mt-2">{{ totalPeso | number:'1.0-0' }} kg</p>
-          <p class="text-blue-600 text-sm mt-1 flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-            </svg>
-            Inventario actual
-          </p>
+    <!-- Primera Fila de Gráficos -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Bobinas Más Populares -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 glow-effect">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <span class="bg-blue-100 text-blue-600 p-2 rounded-lg">📊</span>
+          Bobinas Más Solicitadas
+        </h3>
+        <div class="chart-container">
+          <canvas baseChart
+            [data]="barChartData"
+            [options]="barChartOptions"
+            type="bar">
+          </canvas>
+          <div *ngIf="!datos?.bobinasPopulares?.length" class="chart-overlay">
+            <div class="text-center">
+              <svg class="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+              <p class="text-gray-500">No hay datos de bobinas populares</p>
+            </div>
+          </div>
         </div>
-        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-          </svg>
+      </div>
+
+      <!-- Estado de Bobinas -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 glow-effect">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <span class="bg-purple-100 text-purple-600 p-2 rounded-lg">🎯</span>
+          Distribución por Estado
+        </h3>
+        <div class="chart-container">
+          <canvas baseChart
+            [data]="pieChartData"
+            [options]="pieChartOptions"
+            type="pie">
+          </canvas>
+          <div *ngIf="!datos?.estadoBobinas?.length" class="chart-overlay">
+            <div class="text-center">
+              <svg class="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+              </svg>
+              <p class="text-gray-500">No hay datos de estados</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Tarjeta Proveedores -->
-    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-gray-600 text-sm font-medium">Proveedores</p>
-          <p class="text-3xl font-bold text-gray-800 mt-2">{{ proveedoresCount }}</p>
-          <p class="text-purple-600 text-sm mt-1 flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-            </svg>
-            Activos en sistema
-          </p>
+    <!-- Segunda Fila de Gráficos -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Tendencia Histórica -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 glow-effect">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <span class="bg-green-100 text-green-600 p-2 rounded-lg">📈</span>
+          Tendencia de Pedidos - Último Año
+        </h3>
+        <div class="chart-container">
+          <canvas baseChart
+            [data]="lineChartData"
+            [options]="lineChartOptions"
+            type="line">
+          </canvas>
+          <div *ngIf="!datos?.tendenciaMensual?.length" class="chart-overlay">
+            <div class="text-center">
+              <svg class="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+              </svg>
+              <p class="text-gray-500">No hay datos de tendencia</p>
+            </div>
+          </div>
         </div>
-        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-          <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-          </svg>
+      </div>
+
+      <!-- Predicción de Demanda ML -->
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 glow-effect">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <span class="bg-pink-100 text-pink-600 p-2 rounded-lg">🤖</span>
+          Predicción ML - Demanda Futura
+        </h3>
+        <div class="chart-container">
+          <canvas baseChart
+            [data]="predictionChartData"
+            [options]="predictionChartOptions"
+            type="line">
+          </canvas>
+          <div *ngIf="!datos?.prediccionDemanda?.length" class="chart-overlay">
+            <div class="text-center">
+              <svg class="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+              </svg>
+              <p class="text-gray-500">Generando predicciones con ML...</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Tarjeta Sistema -->
-    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-gray-600 text-sm font-medium">Estado Sistema</p>
-          <p class="text-3xl font-bold text-gray-800 mt-2">OK</p>
-          <p class="text-green-600 text-sm mt-1 flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            Todo operativo
-          </p>
-        </div>
-        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    <!-- Bobinas Antiguas en Inventario -->
+    <div class="data-table rounded-2xl p-6 glow-effect">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <span class="bg-yellow-100 text-yellow-600 p-2 rounded-lg">⏰</span>
+        Bobinas Antiguas (Prioridad de Rotación)
+      </h3>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">ID</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Bobina</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Fecha Ingreso</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Días en Inventario</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Peso (kg)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let bobina of datos.bobinasAntiguas; let i = index" 
+                class="hover:bg-gray-50 transition-colors duration-200">
+              <td class="px-4 py-3 text-sm text-gray-900 font-mono">{{ bobina.id_registro }}</td>
+              <td class="px-4 py-3 text-sm text-gray-900">{{ bobina.bobina }}</td>
+              <td class="px-4 py-3 text-sm text-gray-900">{{ bobina.fecha_ingreso | date:'dd/MM/yyyy' }}</td>
+              <td class="px-4 py-3 text-sm">
+                <span [class]="bobina.dias_inventario > 90 ? 'text-red-600 font-semibold' : 'text-yellow-600'" 
+                      class="px-2 py-1 rounded-full text-xs">
+                  {{ bobina.dias_inventario }} días
+                </span>
+              </td>
+              <td class="px-4 py-3 text-sm text-gray-900 font-semibold">{{ bobina.peso | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div *ngIf="!datos?.bobinasAntiguas?.length" class="text-center py-8 text-gray-500">
+          <svg class="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
           </svg>
+          <p>No hay bobinas antiguas en inventario</p>
         </div>
       </div>
     </div>
+
   </div>
 </div>

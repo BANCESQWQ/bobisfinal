@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { PedidoService } from 'src/app/services/pedido.service';
+import { AuthService } from '../../services/auth.service';
 
 export interface Despacho {
   id_pedido_det: number;
@@ -39,40 +40,46 @@ export class HistorialDespachos implements OnInit {
   selectedDespacho: Despacho | null = null;
   showDetailsModal = false;
 
-  constructor(private pedidoService: PedidoService) {}
+  constructor(private pedidoService: PedidoService, private authService: AuthService) {}
 
   ngOnInit() {
     this.cargarDespachos();
   }
 
   cargarDespachos() {
-    this.isLoading = true;
-    // Simular carga de datos
-    setTimeout(() => {
-      const pedidosPendientes = this.pedidoService.getPedidosPendientes();
-       this.despachos = pedidosPendientes.flatMap(pedido => 
-        pedido.bobinas.map(bobina => ({
-          id_pedido_det: bobina.id_pedido_det || 0,
-          id_pedido: pedido.id_pedido,
-          id_registro: bobina.id_registro,
-          fecha_pedido: pedido.fecha_pedido,
-          solicitante: pedido.solicitante,
-          estado_pedido: pedido.estado_pedido,
-          ped_observaciones: pedido.observaciones,
-          estado_despacho: false, // Inicialmente pendiente
-          pedido_compra: bobina.pedido_compra,
-          colada: bobina.colada,
-          peso: bobina.peso,
-          bobina_desc: bobina.bobina_desc,
-          proveedor_nombre: 'Proveedor por defecto', // Esto vendría de la BD
-          fecha_despacho: '' // Se llenará cuando se complete el checklist
-        }))
-      );
-      this.filteredDespachos = this.despachos;
-      this.isLoading = false;
-    }, 1000);
-  }
+  this.isLoading = true;
+  
+  const usuarioActual = this.authService.getUsuarioActual();
+  const nombreUsuario = usuarioActual ? usuarioActual.nombre : 'Usuario Sistema';
 
+  // Usar datos del servicio en lugar de datos inventados
+  setTimeout(() => {
+    const pedidosPendientes = this.pedidoService.getPedidosPendientes();
+    
+    // Convertir pedidos pendientes a formato de despachos para el historial
+    this.despachos = pedidosPendientes.flatMap(pedido => 
+      pedido.bobinas.map(bobina => ({
+        id_pedido_det: bobina.id_pedido_det || 0,
+        id_pedido: pedido.id_pedido,
+        id_registro: bobina.id_registro,
+        fecha_pedido: pedido.fecha_pedido,
+        solicitante: nombreUsuario, // Usar el nombre del usuario real
+        estado_pedido: pedido.estado_pedido,
+        ped_observaciones: pedido.observaciones,
+        estado_despacho: false,
+        pedido_compra: bobina.pedido_compra,
+        colada: bobina.colada,
+        peso: bobina.peso,
+        bobina_desc: bobina.bobina_desc,
+        proveedor_nombre: 'Proveedor por defecto',
+        fecha_despacho: ''
+      }))
+    );
+
+    this.filteredDespachos = this.despachos;
+    this.isLoading = false;
+  }, 1000);
+}
   aplicarFiltros() {
     if (!this.searchTerm.trim()) {
       this.filteredDespachos = this.despachos;

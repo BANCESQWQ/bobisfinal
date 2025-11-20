@@ -10,6 +10,19 @@ import { MsalService } from '@azure/msal-angular';
   standalone: true,
   imports: [CommonModule, Header, Sidebar, RouterModule],
   templateUrl: './layout.html',
+  template: `
+    <div class="flex h-screen bg-gray-50">
+      <app-sidebar class="flex-shrink-0"></app-sidebar>
+      
+      <div class="flex-1 flex flex-col overflow-hidden">
+        <app-header></app-header>
+        
+        <main class="flex-1 overflow-y-auto">
+          <router-outlet></router-outlet>
+        </main>
+      </div>
+    </div>
+  `,
   styleUrl: './layout.scss'
 })
 export class Layout implements OnInit {

@@ -4,7 +4,7 @@ import { Dashboard } from './components/dashboard/dashboard';
 import { Datatables } from './components/datatables/datatables';
 import { Pedidos } from './components/pedidos/pedidos';
 import { Login } from './components/login/login';
-import { authGuard } from './auth.guard';
+import { AuthGuard } from './auth.guard';
 import { DetallesPedido } from './components/detalles-pedido/detalles-pedido';
 import { HistorialDespachos } from './components/historial-despachos/historial-despachos';
 import { ChecklistDespacho } from './components/checklist-despacho/checklist-despacho';
@@ -15,16 +15,17 @@ export const routes: Routes = [
   {
     path: '',
     component: Layout,
-    canActivate: [authGuard],
+    canActivate: [AuthGuard],
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'detalles-pedido', component: DetallesPedido },
       { path: 'dashboard', component: Dashboard },
+      { path: 'pedidos', component: Pedidos },
+      { path: 'checklist-despacho', component: ChecklistDespacho },
+      { path: 'historial-despachos', component: HistorialDespachos },
+      { path: 'detalles-pedido', component: DetallesPedido },
       { path: 'datatables', component: Datatables },
-      { path: 'pedidos', component: Pedidos, canActivate: [authGuard] },
-      { path: 'historial-despachos', component: HistorialDespachos, canActivate: [authGuard] }, 
-      { path: 'checklist-despacho', component: ChecklistDespacho, canActivate: [authGuard] }, 
-      { path: 'gestion', component: Gestion, canActivate: [authGuard] } 
+      { path: 'gestion', component: Gestion },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
-  }
+  },
+  { path: '**', redirectTo: 'dashboard' }
 ];

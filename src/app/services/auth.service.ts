@@ -1,13 +1,28 @@
 import { Injectable, inject } from '@angular/core';
 import { MsalService } from '@azure/msal-angular';
 import { AccountInfo } from '@azure/msal-browser';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private msalService = inject(MsalService);
+  private usuarioActualSource = new BehaviorSubject<any>(null);
+  usuarioActual$ = this.usuarioActualSource.asObservable();
 
+ constructor(private msalService: MsalService) {}
+ 
+  private cargarUsuarioMicrosoft() {
+    const accounts = this.msalService.instance.getAllAccounts();
+    if (accounts.length > 0) {
+      this.usuarioActualSource.next(accounts[0]);
+    }
+  }
+
+  getUsuarioActual() {
+    return this.usuarioActualSource.value;
+  }
+  
   // Obtener información del usuario logeado
   getCurrentUser(): AccountInfo | null {
     try {

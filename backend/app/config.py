@@ -8,7 +8,7 @@ class Config:
     
     # SQL Server Configuration para bd_bobinas
     DB_SERVER = os.getenv('DB_SERVER', 'localhost')
-    DB_DATABASE = os.getenv('DB_DATABASE', 'bd_bobonas')
+    DB_DATABASE = os.getenv('DB_DATABASE', 'bd_bobxnas')
     DB_USERNAME = os.getenv('DB_USERNAME', '')
     DB_PASSWORD = os.getenv('DB_PASSWORD', '')
     DB_DRIVER = os.getenv('DB_DRIVER', 'ODBC Driver 17 for SQL Server')

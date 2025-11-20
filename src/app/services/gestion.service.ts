@@ -13,10 +13,14 @@ export interface CampoGestion {
   tipo: string;
   requerido: boolean;
   display: string;
+  opciones?: any[];
 }
 
-export interface RegistroGestion {
-  [key: string]: any;
+export interface GestionResponse {
+  success: boolean;
+  data: any[];
+  message?:string;
+  error?: string;
 }
 
 @Injectable({
@@ -30,68 +34,81 @@ export class GestionService {
       nombre: 'UBICACION',
       nombreDisplay: 'Ubicaciones',
       campos: [
-        { nombre: 'desc_ubi', tipo: 'text', requerido: true, display: 'Descripción' }
+        { nombre: 'DESC_UBI', tipo: 'text', requerido: true, display: 'Descripción' }
       ]
     },
     {
       nombre: 'BARCO',
       nombreDisplay: 'Barcos',
       campos: [
-        { nombre: 'nombre_barco', tipo: 'text', requerido: true, display: 'Nombre' }
+        { nombre: 'NOMBRE_BARCO', tipo: 'text', requerido: true, display: 'Nombre' }
       ]
     },
     {
       nombre: 'MOLINO',
       nombreDisplay: 'Molinos',
       campos: [
-        { nombre: 'nombre_molino', tipo: 'text', requerido: true, display: 'Nombre' },
-        { nombre: 'procedencia_id_proced', tipo: 'number', requerido: true, display: 'ID Procedencia' }
+        { nombre: 'NOMBRE_MOLINO', tipo: 'text', requerido: true, display: 'Nombre' },
+        {
+          nombre: 'PROCEDENCIA_ID_PROCED',
+          tipo: 'select',
+          requerido: true,
+          display: 'Procedencia'
+        }
       ]
     },
     {
       nombre: 'PROVEEDOR',
       nombreDisplay: 'Proveedores',
       campos: [
-        { nombre: 'nombre_prov', tipo: 'text', requerido: true, display: 'Nombre' }
+        { nombre: 'NOMBRE_PROV', tipo: 'text', requerido: true, display: 'Nombre' }
       ]
     },
     {
       nombre: 'ESTADO',
       nombreDisplay: 'Estados',
       campos: [
-        { nombre: 'desc_estado', tipo: 'text', requerido: true, display: 'Descripción' }
+        { nombre: 'DESC_ESTADO', tipo: 'text', requerido: true, display: 'Descripción' }
       ]
     },
     {
       nombre: 'PROCEDENCIA',
       nombreDisplay: 'Procedencias',
       campos: [
-        { nombre: 'desc_proced', tipo: 'text', requerido: true, display: 'Descripción' }
+        { nombre: 'DESC_PROCED', tipo: 'text', requerido: true, display: 'Descripción' }
       ]
     }
   ];
 
   constructor(private http: HttpClient) {}
 
-  // Obtener datos de una tabla
-  getDatosTabla(tabla: string): Observable<any> {
-    return this.http.get(`${this.apiUrl}/gestion/${tabla}`)
+  // Obtener datos de una tabla específica
+  getDataTabla(tabla: string): Observable<GestionResponse> {
+    return this.http.get<GestionResponse>(`${this.apiUrl}/gestion/${tabla}`)
       .pipe(
         catchError(this.handleError)
       );
   }
 
   // Agregar registro a una tabla
-  agregarRegistro(tabla: string, datos: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/gestion/${tabla}`, datos)
+  agregarRegistro(tabla: string, datos: any): Observable<GestionResponse> {
+    return this.http.post<GestionResponse>(`${this.apiUrl}/gestion/${tabla}`, datos)
       .pipe(
         catchError(this.handleError)
       );
   }
 
   // Eliminar registro de una tabla
-  eliminarRegistro(tabla: string, id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/gestion/${tabla}/${id}`)
+  eliminarRegistro(tabla: string, id: number): Observable<GestionResponse> {
+    return this.http.delete<GestionResponse>(`${this.apiUrl}/gestion/${tabla}/${id}`)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  // Obtener opciones para combos (procedencias para molinos)
+  getOpcionesProcedencias(): Observable<GestionResponse> {
+    return this.http.get<GestionResponse>(`${this.apiUrl}/gestion/PROCEDENCIA`)
       .pipe(
         catchError(this.handleError)
       );
@@ -99,6 +116,7 @@ export class GestionService {
 
   private handleError(error: HttpErrorResponse) {
     let errorMessage = 'Error desconocido';
+    
     if (error.error instanceof ErrorEvent) {
       errorMessage = `Error: ${error.error.message}`;
     } else {
@@ -107,6 +125,7 @@ export class GestionService {
         errorMessage += ` - ${error.error.error}`;
       }
     }
+    
     console.error('Error en el servicio de gestión:', errorMessage);
     return throwError(() => new Error(errorMessage));
   }

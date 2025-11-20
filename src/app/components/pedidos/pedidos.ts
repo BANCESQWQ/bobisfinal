@@ -6,6 +6,7 @@ import { UserViewModal } from '../user-view-modal/user-view-modal';
 import { DetallesPedido } from '../detalles-pedido/detalles-pedido';
 import { PedidoService, PedidoCab, PedidoPendiente } from '../../services/pedido.service';
 import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 
 @Component({
@@ -46,7 +47,8 @@ export class Pedidos implements OnInit {
   constructor(
     private registroService: RegistroService,
     private pedidoService: PedidoService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {}
 
   async ngOnInit() {
@@ -56,16 +58,29 @@ export class Pedidos implements OnInit {
   }
 
   async cargarUsuarioActual() {
-    // Usuario por defecto sin sistema de roles complejo
+  // Usar el usuario de Microsoft en lugar del simulado
+  const usuarioMicrosoft = this.authService.getUsuarioActual();
+  
+  if (usuarioMicrosoft) {
+    this.usuarioActual = {
+      id_usuario: 1, // Esto vendría de tu BD basado en el usuario de Microsoft
+      nombre_usuario: usuarioMicrosoft.nombre.split(' ')[0],
+      apellido_usuario: usuarioMicrosoft.nombre.split(' ')[1] || '',
+      email: usuarioMicrosoft.email
+    };
+  } else {
+    // Fallback a usuario simulado
     this.usuarioActual = {
       id_usuario: 1,
       nombre_usuario: 'Operador',
       apellido_usuario: 'Sistema'
     };
-    this.puedeCrearPedidos = true;
-    this.puedeConsultar = true;
-    this.puedeDespachar = true;
   }
+  
+  this.puedeCrearPedidos = true;
+  this.puedeConsultar = true;
+  this.puedeDespachar = true;
+}
 
   loadRegistros() {
     this.isLoading = true;
