@@ -9,6 +9,7 @@ import { DetallesPedido } from './components/detalles-pedido/detalles-pedido';
 import { HistorialDespachos } from './components/historial-despachos/historial-despachos';
 import { ChecklistDespacho } from './components/checklist-despacho/checklist-despacho';
 import { Gestion } from './components/gestion/gestion'; 
+import { IngresoBobinas } from './components/ingreso-bobinas/ingreso-bobinas';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -24,6 +25,7 @@ export const routes: Routes = [
       { path: 'detalles-pedido', component: DetallesPedido },
       { path: 'datatables', component: Datatables },
       { path: 'gestion', component: Gestion },
+      { path: 'ingreso-bobinas', component: IngresoBobinas },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },

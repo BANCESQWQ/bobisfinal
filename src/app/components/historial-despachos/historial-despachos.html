@@ -116,20 +116,47 @@
                 Desp: {{ formatearFecha(despacho.fecha_despacho) }}
               </div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap space-x-2">
-              <button
-                (click)="verDetallesDespacho(despacho)"
-                class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600 transition-colors font-medium"
-              >
-                Ver Detalles
-              </button>
-              <button
-                (click)="exportarPDF(despacho)"
-                class="bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600 transition-colors font-medium"
-              >
-                Exportar PDF
-              </button>
-            </td>
+            <!-- En la tabla principal -->
+<td class="px-6 py-4 whitespace-nowrap space-x-2">
+  <button
+    (click)="verDetallesDespacho(despacho)"
+    class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600 transition-colors font-medium flex items-center gap-1"
+  >
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+    </svg>
+    Detalles
+  </button>
+  <button
+    (click)="exportarPDF(despacho)"
+    class="bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600 transition-colors font-medium flex items-center gap-1"
+  >
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+    PDF
+  </button>
+</td>
+
+<!-- En el modal, actualiza el botón de exportar -->
+<div class="border-t border-gray-200 p-4 flex justify-end space-x-3">
+  <button
+    (click)="exportarPDFDesdeModal()"
+    class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium flex items-center gap-2"
+  >
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+    Exportar PDF Completo
+  </button>
+  <button
+    (click)="cerrarModal()"
+    class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"
+  >
+    Cerrar
+  </button>
+</div>
           </tr>
         </tbody>
       </table>
@@ -149,13 +176,13 @@
 
 <!-- Modal de Detalles del Despacho -->
 <div *ngIf="showDetailsModal && selectedDespacho" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
     <!-- Header -->
     <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
       <div class="flex justify-between items-center">
         <div>
-          <h2 class="text-2xl font-bold">Detalles del Despacho</h2>
-          <p class="text-blue-100 opacity-90">ID: {{ selectedDespacho.id_pedido_det }} - Pedido: {{ selectedDespacho.id_pedido }}</p>
+          <h2 class="text-2xl font-bold">Detalles del Pedido #{{ selectedDespacho.id_pedido }}</h2>
+          <p class="text-blue-100 opacity-90">ID Despacho: {{ selectedDespacho.id_pedido_det }}</p>
         </div>
         <button
           (click)="cerrarModal()"
@@ -170,64 +197,53 @@
 
     <!-- Contenido -->
     <div class="p-6 overflow-y-auto max-h-[70vh]">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Información del Despacho -->
-        <div class="space-y-4">
-          <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Información del Despacho</h3>
-          <div class="space-y-2">
-            <div class="flex justify-between">
-              <span class="font-medium text-gray-700">ID Despacho:</span>
-              <span class="text-gray-900">{{ selectedDespacho.id_pedido_det }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="font-medium text-gray-700">Pedido:</span>
-              <span class="text-gray-900">{{ selectedDespacho.id_pedido }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="font-medium text-gray-700">Estado:</span>
-              <span class="px-2 py-1 text-xs font-semibold rounded-full border" [class]="getEstadoClass(selectedDespacho.estado_pedido)">
-                {{ selectedDespacho.estado_pedido }}
-              </span>
-            </div>
-            <div class="flex justify-between">
-              <span class="font-medium text-gray-700">Despacho:</span>
-              <span class="px-2 py-1 text-xs font-semibold rounded-full border" [class]="getDespachoClass(selectedDespacho.estado_despacho)">
-                {{ getDespachoText(selectedDespacho.estado_despacho) }}
-              </span>
-            </div>
-          </div>
+      <!-- Información del Pedido -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <p class="text-sm text-gray-600">Fecha Pedido</p>
+          <p class="font-medium">{{ formatearFecha(selectedDespacho.fecha_pedido) }}</p>
         </div>
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <p class="text-sm text-gray-600">Solicitante</p>
+          <p class="font-medium">{{ selectedDespacho.solicitante }}</p>
+        </div>
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <p class="text-sm text-gray-600">Estado</p>
+          <span class="px-2 py-1 text-xs font-semibold rounded-full border" [class]="getEstadoClass(selectedDespacho.estado_pedido)">
+            {{ selectedDespacho.estado_pedido }}
+          </span>
+        </div>
+      </div>
 
-        <!-- Información de la Bobina -->
-        <div class="space-y-4">
-          <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Información de la Bobina</h3>
-          <div class="space-y-2">
-            <div class="flex justify-between">
-              <span class="font-medium text-gray-700">Registro:</span>
-              <span class="text-gray-900">#{{ selectedDespacho.id_registro }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="font-medium text-gray-700">Bobina:</span>
-              <span class="text-gray-900">{{ selectedDespacho.bobina_desc }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="font-medium text-gray-700">Pedido Compra:</span>
-              <span class="text-gray-900">{{ selectedDespacho.pedido_compra }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="font-medium text-gray-700">Colada:</span>
-              <span class="text-gray-900">{{ selectedDespacho.colada }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="font-medium text-gray-700">Peso:</span>
-              <span class="text-gray-900 font-semibold">{{ selectedDespacho.peso }} kg</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="font-medium text-gray-700">Proveedor:</span>
-              <span class="text-gray-900">{{ selectedDespacho.proveedor_nombre }}</span>
-            </div>
-          </div>
-        </div>
+      <!-- Detalles de Bobinas -->
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">Bobinas del Pedido</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">ID Registro</th>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Bobina</th>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Pedido Compra</th>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Colada</th>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Peso (kg)</th>
+              <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Proveedor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let detalle of detallesPedido" class="border-b border-gray-200">
+              <td class="px-4 py-3 text-sm">{{ detalle.id_registro }}</td>
+              <td class="px-4 py-3 text-sm">{{ detalle.desc_bobi }}</td>
+              <td class="px-4 py-3 text-sm">{{ detalle.pedido_compra }}</td>
+              <td class="px-4 py-3 text-sm">{{ detalle.colada }}</td>
+              <td class="px-4 py-3 text-sm">{{ detalle.peso | number:'1.2-2' }}</td>
+              <td class="px-4 py-3 text-sm">{{ detalle.nombre_prov }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="detallesPedido.length === 0" class="text-center py-8 text-gray-500">
+        No hay detalles disponibles para este pedido
       </div>
 
       <!-- Observaciones -->
@@ -235,31 +251,10 @@
         <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Observaciones</h3>
         <p class="text-gray-700 bg-gray-50 rounded-lg p-4">{{ selectedDespacho.ped_observaciones || 'Sin observaciones' }}</p>
       </div>
-
-      <!-- Fechas -->
-      <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <span class="font-medium text-gray-700">Fecha Pedido:</span>
-          <p class="text-gray-900">{{ formatearFecha(selectedDespacho.fecha_pedido) }}</p>
-        </div>
-        <div *ngIf="selectedDespacho.fecha_despacho">
-          <span class="font-medium text-gray-700">Fecha Despacho:</span>
-          <p class="text-gray-900">{{ formatearFecha(selectedDespacho.fecha_despacho) }}</p>
-        </div>
-      </div>
     </div>
 
     <!-- Footer -->
     <div class="border-t border-gray-200 p-4 flex justify-end space-x-3">
-      <button
-        (click)="exportarPDF(selectedDespacho)"
-        class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium flex items-center gap-2"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-        </svg>
-        Exportar PDF
-      </button>
       <button
         (click)="cerrarModal()"
         class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"

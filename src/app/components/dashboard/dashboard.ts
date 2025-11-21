@@ -61,13 +61,13 @@ const COLOR_PALETTE = {
     BaseChartDirective
   ],
   templateUrl: './dashboard.html',
-  styleUrls: ['./dashboard.scss'] // ✅ Cambiado a styleUrls
+  styleUrls: ['./dashboard.scss'] 
 })
 export class Dashboard implements OnInit, OnDestroy {
   datos: AnaliticaData | null = null;
   isLoading = true;
   errorMessage = '';
-  today = new Date(); // ✅ Agregada propiedad today
+  today = new Date();
   private animationFrame: any;
 
   // Estadísticas animadas
@@ -100,7 +100,7 @@ export class Dashboard implements OnInit, OnDestroy {
       },
       title: {
         display: true,
-        text: '📊 Bobinas Más Solicitadas',
+        text: 'Bobinas Más Solicitadas',
         color: '#374151',
         font: {
           size: 16,
@@ -543,7 +543,6 @@ export class Dashboard implements OnInit, OnDestroy {
     return icons[stat] || icons.total;
   }
 
-  // Métodos auxiliares para la UI
   getBobinaMasPopular(): BobinaPopular | null {
     return this.datos?.bobinasPopulares[0] || null;
   }
@@ -563,12 +562,21 @@ export class Dashboard implements OnInit, OnDestroy {
     }
   }
 
-  getIconoTendencia(): string {
-    const tendencia = this.getTendenciaActual();
-    switch(tendencia) {
-      case 'creciente': return '🚀';
-      case 'decreciente': return '📉';
-      default: return '⚡';
+    getIconoTendencia(): string {
+      const tendencia = this.getTendenciaActual();
+      switch(tendencia) {
+        case 'creciente': 
+          return `<svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                  </svg>`;
+        case 'decreciente': 
+          return `<svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>
+                  </svg>`;
+        default: 
+          return `<svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/>
+                  </svg>`;
+      }
     }
-  }
 }

@@ -29,7 +29,13 @@ export class Sidebar {
   { label: 'Historial Despachos', route: '/historial-despachos', isActive: false },
   { label: 'Gestión', route: '/gestion', isActive: false },
 ];
-
+ toggleMobileMenu() {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+    // Si estamos abriendo el menú móvil, también abrimos el sidebar
+    if (this.isMobileMenuOpen) {
+      this.isSidebarOpen = true;
+    }
+  }
   toggleSidebar() {
     this.isSidebarOpen = !this.isSidebarOpen;
   }

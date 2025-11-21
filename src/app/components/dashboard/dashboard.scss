@@ -1,29 +1,19 @@
-// Variables de colores
+// Variables de colores con variantes predefinidas
 $primary-blue: #3B82F6;
 $primary-green: #10B981;
 $primary-purple: #8B5CF6;
 $primary-orange: #F59E0B;
 $primary-pink: #EC4899;
 
-// Funciones modernas de color usando HSL (reemplazan darken/lighten)
-@function scale-color($color, $lightness: 0%) {
-  @return adjust-color($color, $lightness: $lightness);
-}
-
-@function adjust-color($color, $lightness: 0%, $saturation: 0%) {
-  $h: hue($color);
-  $s: saturation($color) + $saturation;
-  $l: lightness($color) + $lightness;
-  @return hsl($h, $s, $l);
-}
-
-// Colores precalculados para evitar deprecaciones
-$primary-blue-light: adjust-color($primary-blue, $lightness: 15%);
-$primary-green-light: adjust-color($primary-green, $lightness: 15%);
-$primary-purple-light: adjust-color($primary-purple, $lightness: 15%);
-$primary-green-dark: adjust-color($primary-green, $lightness: -16%);
-$primary-pink-dark: adjust-color($primary-pink, $lightness: -16%);
-$primary-orange-dark: adjust-color($primary-orange, $lightness: -16%);
+// Colores precalculados manualmente (sin funciones deprecadas)
+$primary-blue-light: #60A5FA;
+$primary-green-light: #34D399;
+$primary-purple-light: #A78BFA;
+$primary-blue-dark: #1D4ED8;
+$primary-green-dark: #047857;
+$primary-purple-dark: #7C3AED;
+$primary-orange-dark: #D97706;
+$primary-pink-dark: #BE185D;
 
 // Mixins para efectos
 @mixin card-hover {
@@ -36,17 +26,13 @@ $primary-orange-dark: adjust-color($primary-orange, $lightness: -16%);
   background: linear-gradient(135deg, nth($colors, 1), nth($colors, 2), nth($colors, 3));
 }
 
-// Animaciones
+// Animaciones (mantener las keyframes existentes)
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
-@keyframes slideIn {
+@keyframes slidein {
   from {
     opacity: 0;
     transform: translateY(20px);
@@ -57,72 +43,52 @@ $primary-orange-dark: adjust-color($primary-orange, $lightness: -16%);
   }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+@keyframes fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes float {
   0%, 100% {
-    transform: translateY(0) translateX(0);
+    transform: translateX(0) translateY(0);
     opacity: 0;
   }
   10% {
     opacity: 1;
   }
-  90% {
+  50% {
     opacity: 0;
   }
-  50% {
-    transform: translateY(-100px) translateX(20px);
+  90% {
+    transform: translateX(-100px) translateY(20px);
   }
 }
 
 @keyframes shimmer {
-  0% { 
-    transform: translateX(-100%); 
-  }
-  100% { 
-    transform: translateX(100%); 
-  }
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 @keyframes spin {
-  0% { 
-    transform: rotate(0deg); 
-  }
-  100% { 
-    transform: rotate(360deg); 
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 @keyframes loading {
-  0% { 
-    background-position: 200% 0; 
-  }
-  100% { 
-    background-position: -200% 0; 
-  }
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 @keyframes glow {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 // Estilos principales
 :host {
   display: block;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
 // Header con gradiente animado
@@ -130,7 +96,7 @@ $primary-orange-dark: adjust-color($primary-orange, $lightness: -16%);
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   position: relative;
   overflow: hidden;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -150,7 +116,7 @@ $primary-orange-dark: adjust-color($primary-orange, $lightness: -16%);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -160,7 +126,7 @@ $primary-orange-dark: adjust-color($primary-orange, $lightness: -16%);
     height: 4px;
     background: linear-gradient(90deg, $primary-blue, $primary-green, $primary-purple);
   }
-  
+
   &:hover {
     @include card-hover;
     
@@ -168,22 +134,22 @@ $primary-orange-dark: adjust-color($primary-orange, $lightness: -16%);
       transform: scale(1.1) rotate(5deg);
     }
   }
-  
+
   .stat-icon {
     transition: all 0.3s ease-in-out;
     border-radius: 12px;
     padding: 12px;
-    
+
     &.blue {
       background: rgba($primary-blue, 0.1);
       color: $primary-blue;
     }
-    
+
     &.green {
       background: rgba($primary-green, 0.1);
       color: $primary-green;
     }
-    
+
     &.orange {
       background: rgba($primary-orange, 0.1);
       color: $primary-orange;
@@ -197,14 +163,14 @@ $primary-orange-dark: adjust-color($primary-orange, $lightness: -16%);
   border-radius: 10px;
   overflow: hidden;
   height: 8px;
-  
+
   .progress-fill {
     height: 100%;
     border-radius: 10px;
     transition: width 1.5s ease-in-out;
     position: relative;
     overflow: hidden;
-    
+
     &::after {
       content: '';
       position: absolute;
@@ -215,16 +181,18 @@ $primary-orange-dark: adjust-color($primary-orange, $lightness: -16%);
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
       animation: shimmer 2s infinite;
     }
-    
+
     // Usando colores precalculados
-    &.blue { 
-      background: linear-gradient(90deg, $primary-blue, $primary-blue-light); 
+    &.blue {
+      background: linear-gradient(90deg, $primary-blue, $primary-blue-light);
     }
-    &.green { 
-      background: linear-gradient(90deg, $primary-green, $primary-green-light); 
+    
+    &.green {
+      background: linear-gradient(90deg, $primary-green, $primary-green-light);
     }
-    &.purple { 
-      background: linear-gradient(90deg, $primary-purple, $primary-purple-light); 
+    
+    &.purple {
+      background: linear-gradient(90deg, $primary-purple, $primary-purple-light);
     }
   }
 }
@@ -236,11 +204,11 @@ $primary-orange-dark: adjust-color($primary-orange, $lightness: -16%);
   background: white;
   border-radius: 12px;
   padding: 16px;
-  
+
   canvas {
     border-radius: 8px;
   }
-  
+
   &:hover {
     .chart-overlay {
       opacity: 1;
@@ -271,24 +239,21 @@ $primary-orange-dark: adjust-color($primary-orange, $lightness: -16%);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  
+
   &.creciente {
     background: rgba($primary-green, 0.1);
-    // Usando color precalculado
     color: $primary-green-dark;
     border: 1px solid rgba($primary-green, 0.3);
   }
-  
+
   &.decreciente {
     background: rgba($primary-pink, 0.1);
-    // Usando color precalculado
     color: $primary-pink-dark;
     border: 1px solid rgba($primary-pink, 0.3);
   }
-  
+
   &.estable {
     background: rgba($primary-orange, 0.1);
-    // Usando color precalculado
     color: $primary-orange-dark;
     border: 1px solid rgba($primary-orange, 0.3);
   }
@@ -300,10 +265,10 @@ $primary-orange-dark: adjust-color($primary-orange, $lightness: -16%);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  
+
   thead {
     background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-    
+
     th {
       padding: 16px;
       font-weight: 600;
@@ -314,16 +279,16 @@ $primary-orange-dark: adjust-color($primary-orange, $lightness: -16%);
       font-size: 0.75rem;
     }
   }
-  
+
   tbody {
     tr {
       transition: all 0.2s ease-in-out;
-      
+
       &:hover {
         background: #f7fafc;
         transform: translateX(4px);
       }
-      
+
       td {
         padding: 16px;
         border-bottom: 1px solid #e2e8f0;
@@ -335,8 +300,8 @@ $primary-orange-dark: adjust-color($primary-orange, $lightness: -16%);
 
 // Loading states
 .loading-spinner {
-  border: 3px solid #f3f4f6;
-  border-top: 3px solid $primary-blue;
+  border: 2px solid #f3f4f6;
+  border-top: 2px solid $primary-blue;
   border-radius: 50%;
   width: 60px;
   height: 60px;
@@ -358,7 +323,7 @@ $primary-orange-dark: adjust-color($primary-orange, $lightness: -16%);
   width: 100%;
   height: 100%;
   pointer-events: none;
-  
+
   .particle {
     position: absolute;
     width: 4px;
@@ -372,7 +337,7 @@ $primary-orange-dark: adjust-color($primary-orange, $lightness: -16%);
 // Efectos de brillo
 .glow-effect {
   position: relative;
-  
+
   &::after {
     content: '';
     position: absolute;
@@ -380,7 +345,7 @@ $primary-orange-dark: adjust-color($primary-orange, $lightness: -16%);
     left: -2px;
     right: -2px;
     bottom: -2px;
-    background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57, #ff9ff3, #54a0ff);
+    background: linear-gradient(45deg, #ff0080, #abc4e4, #d507d1, #b6c8b4, #fcc257, #ff9ff3, #54a9ff);
     background-size: 400% 400%;
     border-radius: 14px;
     z-index: -1;
@@ -388,7 +353,7 @@ $primary-orange-dark: adjust-color($primary-orange, $lightness: -16%);
     opacity: 0;
     transition: opacity 0.3s ease-in-out;
   }
-  
+
   &:hover::after {
     opacity: 1;
   }
@@ -448,7 +413,7 @@ $primary-orange-dark: adjust-color($primary-orange, $lightness: -16%);
   }
 }
 
-// Colores de texto para estados de inventario
+// Colores de texto para edades de inventario
 .inventory-status {
   &.old {
     color: #DC2626; // Rojo para inventario viejo

@@ -87,6 +87,7 @@ def actualizar_registro(id_registro):
             'error': f'Error al actualizar registro: {str(e)}'
         }), 500
 
+
 @app.route('/api/dashboard/analitica-predictiva', methods=['GET'])
 def get_analitica_predictiva():
     try:
@@ -503,6 +504,87 @@ def test_db():
             'error': str(e)
         }), 500
 
+@app.route('/api/registros', methods=['POST'])
+def crear_registro():
+    try:
+        data = request.get_json()
+        print('Datos recibidos para crear registro:', data)
+
+        # Mapeo de campos del frontend a la base de datos
+        campos_db = {
+            'fecha_llegada': 'FECHA_LLEGADA',
+            'pedido_compra': 'PEDIDO_COMPRA', 
+            'colada': 'COLADA',
+            'peso': 'PESO',
+            'cantidad': 'CANTIDAD',
+            'lote': 'LOTE',
+            'fecha_inventario': 'FECHA_INVENTARIO',
+            'observaciones': 'OBSERVACIONES',
+            'ton_pedido_compra': 'TON_PEDIDO_COMPRA',
+            'fecha_ingreso_planta': 'FECHA_INGRESO_PLANTA',  # Campo requerido
+            'bobina_id_bobi': 'BOBINA_ID_BOBI',
+            'proveedor_id_prov': 'PROVEEDOR_ID_PROV',
+            'barco_id_barco': 'BARCO_ID_BARCO',
+            'ubicacion_id_ubi': 'UBICACION_ID_UBI',
+            'estado_id_estado': 'ESTADO_ID_ESTADO',
+            'molino_id_molino': 'MOLINO_ID_MOLINO',
+            'n_bobi_proveedor': 'N_BOBI_PROVEEDOR',
+            'bobi_correlativo': 'BOBI_CORRELATIVO',
+            'cod_bobin2': 'COD_BOBIN2'
+        }
+
+        campos = []
+        valores = []
+        params = {}
+
+        # Campos obligatorios que deben tener valor
+        campos_obligatorios = ['fecha_ingreso_planta', 'estado_id_estado']
+        
+        for campo_obligatorio in campos_obligatorios:
+            if campo_obligatorio not in data or data[campo_obligatorio] is None:
+                if campo_obligatorio == 'fecha_ingreso_planta':
+                    data[campo_obligatorio] = datetime.now().strftime('%Y-%m-%d')
+                elif campo_obligatorio == 'estado_id_estado':
+                    data[campo_obligatorio] = 1  # Estado por defecto
+
+        for campo_front, campo_bd in campos_db.items():
+            if campo_front in data and data[campo_front] is not None and data[campo_front] != '':
+                campos.append(campo_bd)
+                valores.append(f':{campo_front}')
+                params[campo_front] = data[campo_front]
+
+        if not campos:
+            return jsonify({
+                'success': False,
+                'error': 'No se proporcionaron datos para crear el registro'
+            }), 400
+
+        query = f"INSERT INTO REGISTROS ({', '.join(campos)}) VALUES ({', '.join(valores)})"
+        
+        print('Query de inserción:', query)
+        print('Parámetros:', params)
+
+        result = db.session.execute(text(query), params)
+        db.session.commit()
+        
+        # Obtener el ID del registro insertado
+        id_query = "SELECT SCOPE_IDENTITY()"
+        id_result = db.session.execute(text(id_query))
+        id_registro = id_result.scalar()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Registro creado exitosamente',
+            'id_registro': id_registro
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print('Error al crear registro:', str(e))
+        return jsonify({
+            'success': False,
+            'error': f'Error al crear registro: {str(e)}'
+        }), 500
 @app.route('/api/registros')
 def get_registros():
     try:
